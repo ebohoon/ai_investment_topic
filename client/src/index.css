@@ -1,0 +1,49 @@
+:root {
+  color-scheme: light dark;
+  --bg: #0f1419;
+  --surface: #1a222c;
+  --border: #2d3a47;
+  --text: #e8eef4;
+  --muted: #8b9aab;
+  --accent: #3d8bfd;
+  --accent-dim: #2563eb;
+  --success: #34d399;
+  --error: #f87171;
+  font-family: "IBM Plex Sans KR", system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f4f6f9;
+    --surface: #ffffff;
+    --border: #d8dee6;
+    --text: #1a2332;
+    --muted: #5c6b7a;
+    --accent: #2563eb;
+    --accent-dim: #1d4ed8;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
