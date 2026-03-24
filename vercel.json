@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
-  "buildCommand": "node scripts/build-client.mjs",
+  "buildCommand": "npm run build --prefix ./client",
   "outputDirectory": "client/dist",
   "functions": {
     "api/recommend.ts": {
