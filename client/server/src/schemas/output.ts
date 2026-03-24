@@ -20,3 +20,24 @@ export const recommendResponseSchema = z.object({
 
 export type TopicItem = z.infer<typeof topicItemSchema>;
 export type RecommendResponse = z.infer<typeof recommendResponseSchema>;
+
+export const questionsResponseSchema = z.object({
+  questions: z.array(z.string().min(10).max(400)).min(3).max(5),
+});
+
+export type QuestionsResponse = z.infer<typeof questionsResponseSchema>;
+
+export const explorationDesignSchema = z.object({
+  title: z.string().min(5),
+  researchQuestion: z.string().min(8).max(400),
+  overview: z.string().min(30).max(2500),
+  methodSteps: z.array(z.string().min(3)).min(4).max(12),
+  expectedResults: z.string().min(20).max(2000),
+  extensionDirections: z.string().min(15).max(1500),
+  subjects: z.array(z.string().min(1)).min(2).max(5),
+  recordSentence: z.string().min(20).max(600),
+  aiEthicsNote: z.string().min(30).max(800),
+  processChecklist: z.array(z.string().min(3)).min(3).max(8),
+});
+
+export type ExplorationDesign = z.infer<typeof explorationDesignSchema>;

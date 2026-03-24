@@ -68,4 +68,60 @@ export function resolveAllowedSubjects(major: string, keywords: string[]): strin
   return merged;
 }
 
+/** UI 교과 선택(국어·수학·…)과 기록부용 교과 라벨 매핑 */
+export const CURRICULUM_SUBJECT_UI = [
+  "국어",
+  "수학",
+  "영어",
+  "사회",
+  "과학",
+  "정보",
+  "기타",
+] as const;
+
+export type CurriculumSubjectUi = (typeof CURRICULUM_SUBJECT_UI)[number];
+
+function mapUiSubjectToPool(ui: CurriculumSubjectUi): SubjectLabel[] {
+  switch (ui) {
+    case "국어":
+      return ["국어"];
+    case "수학":
+      return ["수학"];
+    case "영어":
+      return ["영어"];
+    case "사회":
+      return ["사회(한국사/통합사회)"];
+    case "과학":
+      return ["과학(통합과학/물화생지)"];
+    case "정보":
+      return ["정보"];
+    case "기타":
+      return [];
+    default:
+      return [];
+  }
+}
+
+/** 선택 교과를 반드시 후보에 포함하고, 전공·키워드 규칙과 병합합니다. */
+export function resolveAllowedSubjectsWithCurriculum(
+  uiSubject: CurriculumSubjectUi,
+  major: string,
+  keywords: string[]
+): string[] {
+  const fromUi = mapUiSubjectToPool(uiSubject);
+  const fromRules = resolveAllowedSubjects(major, keywords) as SubjectLabel[];
+  let merged = uniq([...fromUi, ...fromRules]);
+  if (merged.length < 3) {
+    merged = uniq([
+      ...merged,
+      "국어",
+      "수학",
+      "과학(통합과학/물화생지)",
+      "사회(한국사/통합사회)",
+      "정보",
+    ]);
+  }
+  return merged;
+}
+
 export const SUBJECT_REFERENCE = SUBJECT_POOL.join(", ");

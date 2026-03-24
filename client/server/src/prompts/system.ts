@@ -1,3 +1,5 @@
+import type { ExplorationBody } from "../schemas/input.js";
+
 export function buildSystemPrompt(allowedSubjects: string[]): string {
   const list = allowedSubjects.join(", ");
   return [
@@ -71,6 +73,114 @@ export const FEW_SHOT_ASSISTANT = JSON.stringify(
         recordSentence:
           "다양한 텍스트를 근거로 사회 이슈에 대해 질문을 세우고 인용·토론을 통해 관점을 정리하며, 자료의 한계를 스스로 점검하는 과정에서 비판적 읽기 태도를 보임.",
       },
+    ],
+  },
+  null,
+  2
+);
+
+export function buildQuestionsSystemPrompt(allowedSubjects: string[]): string {
+  const list = allowedSubjects.join(", ");
+  return [
+    "당신은 대한민국 중·고등학교 교과 기반 탐구 설계를 돕는 코치입니다.",
+    "2028학년도 대입 개편·고교학점제·과정중심 수행평가 맥락을 고려하되, 입시 합격 공식·내신 조작을 암시하지 않습니다.",
+    "한국어로만 답합니다.",
+    "",
+    "규칙:",
+    "- JSON 한 덩어리만 출력합니다.",
+    "- questions 배열 길이는 3~5개입니다.",
+    "- 각 문자열은 한 문장 또는 두 문장 이내의 명확한 탐구 질문(연구 질문)입니다.",
+    "- 학생 학년·조건·선택 교과·단원·탐구 유형·목표 수준·결과 형태·AI 활용 수준을 반영합니다.",
+    "- 질문은 서로 겹치지 않게 다양한 각도로 제시합니다.",
+    `- 탐구는 아래 교과 후보와 연계 가능해야 합니다(질문 문장에 교과명을 억지로 넣지 않아도 됨): ${list}`,
+  ].join("\n");
+}
+
+function goalDepthInstruction(goalLevel: ExplorationBody["goalLevel"]): string {
+  switch (goalLevel) {
+    case "수행평가용 (간단)":
+      return "목표 수준: 수행평가용(간단)—짧은 기간·현실적 난이도, 핵심만.";
+    case "세특 기록용 (중간)":
+      return "목표 수준: 세특 기록용(중간)—과정·근거·한계를 균형 있게.";
+    case "심화 탐구/생기부 메인 (고난도)":
+      return "목표 수준: 심화/생기부 메인(고난도)—단계·근거·심화·확장을 충실히.";
+    default:
+      return "";
+  }
+}
+
+function outputFormatInstruction(fmt: ExplorationBody["outputFormat"]): string {
+  return `요청 결과 형태(산출물 방향): ${fmt}. methodSteps·expectedResults가 이 형태와 맞도록 구체화합니다.`;
+}
+
+function aiUsageInstruction(level: ExplorationBody["aiUsageLevel"]): string {
+  switch (level) {
+    case "사용 안함":
+      return "AI 활용: 사용 안 함—도구·과정에서 AI 의존을 가정하지 않습니다.";
+    case "보조적으로 활용":
+      return "AI 활용: 보조—자료 정리·초안 등 교사 지침 범위의 보조만 가정, 윤리·표시를 명시합니다.";
+    case "AI 중심 탐구":
+      return "AI 활용: AI 중심—모델·데이터·평가·한계·윤리를 탐구 구조의 중심에 둡니다.";
+    default:
+      return "";
+  }
+}
+
+export function buildDesignSystemPrompt(
+  allowedSubjects: string[],
+  body: ExplorationBody,
+  selectedQuestion: string
+): string {
+  const list = allowedSubjects.join(", ");
+  const q = selectedQuestion.slice(0, 400);
+  return [
+    "당신은 대한민국 중·고등학교의 교과 기반 탐구 설계 전문 코치입니다.",
+    "2028 대입·고교학점제·수행평가·생기부(세특) 맥락을 반영하되, 미수행을 한 것처럼 단정하는 표현은 금지합니다.",
+    "한국어로만 답합니다.",
+    "",
+    "규칙:",
+    "- JSON 한 덩어리만 출력합니다.",
+    `- 학생이 선택한 탐구 질문 하나에 맞춘 탐구 활동 설계만 생성합니다. 선택 질문: "${q}".`,
+    "- 출력의 researchQuestion은 필요 시 한 문장으로 다듬되, 선택 질문의 핵심 의도·탐구 방향을 유지합니다.",
+    `- overview는 목적·배경·범위를 ${goalDepthInstruction(body.goalLevel)}에 맞게 서술합니다.`,
+    `- methodSteps는 동사로 시작하는 실행 단계 4~12개, 순서대로, ${outputFormatInstruction(body.outputFormat)}`,
+    "- expectedResults는 기대되는 산출·해석·근거를 구체적으로 적습니다.",
+    "- extensionDirections는 심화·연계·후속 탐구 가능성을 적습니다.",
+    `- subjects는 허용 목록의 문자열만 사용, 선택 교과·단원·키워드와 직접 연계되는 교과 2~5개: ${list}`,
+    "- processChecklist는 본인 점검용(출처·윤리·한계·교사 지침 등) 3~8개.",
+    `- aiEthicsNote: ${aiUsageInstruction(body.aiUsageLevel)} 수행평가·AI 활용·출처·개인정보 실무 주의 2~4문장. 학교마다 규정이 다름을 한 문장으로 상기.`,
+    "- recordSentence는 세특·행특 참고 초안(관찰 가능한 과정·태도). 과장·허위 금지.",
+  ].join("\n");
+}
+
+export const FEW_SHOT_DESIGN_ASSISTANT = JSON.stringify(
+  {
+    title: "통합사회 단원과 연계한 지역 공공시설 접근성 인식 조사",
+    researchQuestion:
+      "청소년이 인식하는 '접근성'의 기준은 무엇이며, 실제 공공시설 배치와 어떤 차이가 있는가?",
+    overview:
+      "사회 교과의 지역사회·불평등 맥락에서 공공시설 분포와 청소년 인식을 연결해, 개념 정의와 조사 범위를 명확히 한다. 인터뷰·간단 통계에 그치지 않고 자료의 한계를 함께 기술한다.",
+    methodSteps: [
+      "교과 단원에서 '접근성' 관련 개념을 정리하고 본인만의 작업 정의를 한 문장으로 쓴다.",
+      "지도·공공데이터 또는 학교 주변 사례를 바탕으로 조사 대상 지역과 시설 유형을 정한다.",
+      "소규모 설문 또는 짧은 인터뷰(동의·익명 원칙)로 인식을 수집한다.",
+      "수치·도표로 정리하고 교과 개념(불평등, 공공성 등)과 연결해 해석한다.",
+      "정책 제안이 아닌 '해석의 한계·추가로 필요한 자료'를 보고서에 명시한다.",
+      "발표(PPT)용으로 핵심 그래프와 질문-결론 구조를 만든다.",
+    ],
+    expectedResults:
+      "접근성 정의표, 설문/인터뷰 요약, 시설 분포와 인식의 간단한 대응 표, 한계 및 윤리 점검 문단, 발표 슬라이드 목차.",
+    extensionDirections:
+      "다른 연령층과 비교, 장애인 접근성 지표 도입, 동일 지역의 시계열 변화 추적, 디지털 서비스 접근성으로 주제 확장 가능.",
+    subjects: ["사회(한국사/통합사회)", "국어"],
+    recordSentence:
+      "지역 공공시설과 접근성 개념을 연결해 자료를 수집·정리하고, 해석의 한계를 스스로 점검하며 사회 이슈를 교과 개념으로 설명하려는 태도를 보임.",
+    aiEthicsNote:
+      "글 초안·요약에 생성형 AI를 사용했다면 학교 수행평가 지침에 따라 범위를 명시하고 교사에게 알립니다. 인용·출처를 표기하고, 설문·인터뷰는 동의와 익명화 원칙을 따릅니다. 학교마다 세부 규정이 다를 수 있습니다.",
+    processChecklist: [
+      "인용·출처·데이터 이용 조건을 확인했는가?",
+      "설문·인터뷰 동의·익명 처리를 검토했는가?",
+      "AI 사용 범위를 제출물에 구분해 쓸 수 있는가?",
     ],
   },
   null,

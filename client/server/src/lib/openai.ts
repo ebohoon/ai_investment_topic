@@ -9,6 +9,18 @@ import {
 } from "../schemas/output.js";
 
 function buildUserContent(body: RecommendBody, allowedSubjects: string[]): string {
+  const constraintLines = [
+    body.constraintPeriod && `기간: ${body.constraintPeriod}`,
+    body.constraintPlace && `장소·환경: ${body.constraintPlace}`,
+    body.constraintTeam && `진행 방식: ${body.constraintTeam}`,
+    body.constraintBudget && `비용·재료: ${body.constraintBudget}`,
+    body.constraintsExtra?.trim() && `기타: ${body.constraintsExtra.trim()}`,
+  ].filter(Boolean) as string[];
+  const constraintBlock =
+    constraintLines.length > 0
+      ? `탐구 조건(학생 선택):\n${constraintLines.join("\n")}`
+      : null;
+
   const opt = [
     body.mbtiOrTrait ? `성향/MBTI: ${body.mbtiOrTrait}` : null,
     body.gradeLevel ? `내신 수준(자기평가): ${body.gradeLevel}` : null,
@@ -16,17 +28,26 @@ function buildUserContent(body: RecommendBody, allowedSubjects: string[]): strin
       ? `수행평가·탐구 경험: ${body.performanceExperience}`
       : null,
     body.inquiryStyle ? `희망 탐구 방식: ${body.inquiryStyle}` : null,
-    body.constraintsNote ? `기간·장소·혼자/모둠 등 조건: ${body.constraintsNote}` : null,
+    constraintBlock,
   ]
     .filter(Boolean)
     .join("\n");
 
-  const gradeDepth =
-    body.grade === "중3"
-      ? "학년 수준: 중3—탐구 깊이·분량은 중학교 수행평가에 맞게 조정."
-      : body.grade === "고1"
-        ? "학년 수준: 고1—기초 탐구·과정 서술을 충실히, 결과의 과장을 피할 것."
-        : "학년 수준: 고2—고등학교 교과 세특·수행에 연결 가능한 구체적 과정을 강조.";
+  const gradeDepthByYear: Record<(typeof body.grade), string> = {
+    중1:
+      "학년 수준: 중1—관찰·체험·짧은 보고 중심, 분량·개념 난이도는 최저로. 안전·교사·보호자 협조가 필요한 활동은 단계에 명시.",
+    중2:
+      "학년 수준: 중2—중1보다 약간 확장된 탐구·정리 가능, 여전히 중학 수행 범위·시간 내 완수 가능한 규모로 조정.",
+    중3:
+      "학년 수준: 중3—중학교 수행평가에 맞는 깊이·분량, 고등학교 진학 전 정리·발표 역량을 고려.",
+    고1:
+      "학년 수준: 고1—기초 탐구·과정 서술을 충실히, 결과의 과장을 피할 것. 교과 연계는 입문 수준에서 구체적으로.",
+    고2:
+      "학년 수준: 고2—교과 세특·수행에 연결 가능한 구체적 과정·근거를 강조. 탐구 단계는 실행 가능하게.",
+    고3:
+      "학년 수준: 고3—수능·학업 부담을 고려해 기간·분량은 현실적으로. 세특·수행 연계는 명확하되 과도한 부담을 주지 말 것.",
+  };
+  const gradeDepth = gradeDepthByYear[body.grade];
 
   const profile = [
     "학생 프로필:",

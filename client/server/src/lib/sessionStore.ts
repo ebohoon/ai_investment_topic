@@ -22,7 +22,10 @@ async function getClient(): Promise<MongoClient | null> {
 export async function saveGeneratedSession(payload: {
   input: unknown;
   allowedSubjects: string[];
-  topics: unknown;
+  topics?: unknown;
+  questions?: unknown;
+  design?: unknown;
+  designs?: unknown;
 }): Promise<void> {
   try {
     const c = await getClient();

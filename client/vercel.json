@@ -26,6 +26,12 @@
   "functions": {
     "api/recommend.ts": {
       "maxDuration": 60
+    },
+    "api/recommend/questions.ts": {
+      "maxDuration": 60
+    },
+    "api/recommend/design.ts": {
+      "maxDuration": 60
     }
   }
 }
