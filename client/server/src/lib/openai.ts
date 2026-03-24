@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { readRuntimeEnv } from "./runtimeEnv.js";
 import { FEW_SHOT_ASSISTANT, buildSystemPrompt } from "../prompts/system.js";
 import type { RecommendBody } from "../schemas/input.js";
 import { buildRecommendResponseJsonSchema } from "../schemas/recommendJsonSchema.js";
@@ -89,7 +90,7 @@ export async function generateRecommendations(
   body: RecommendBody,
   allowedSubjects: string[]
 ): Promise<RecommendResponse> {
-  const key = process.env.OPENAI_API_KEY;
+  const key = readRuntimeEnv("OPENAI_API_KEY");
   if (!key) {
     throw new Error(
       "OPENAI_API_KEY가 설정되지 않았습니다. " +
@@ -97,7 +98,7 @@ export async function generateRecommendations(
     );
   }
 
-  const model = process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+  const model = readRuntimeEnv("OPENAI_MODEL") ?? "gpt-4o-mini";
   const client = new OpenAI({ apiKey: key });
   const system = buildSystemPrompt(allowedSubjects);
   let userContent = buildUserContent(body, allowedSubjects);

@@ -16,3 +16,9 @@ Vercel 배포
 지금은 Root 가 client 일 때는 client/vercel.json 이 npm run build 만 사용합니다.
 
 로컬 API .env 위치: client/server/.env (이전 server/.env 는 여기로 옮기세요)
+
+환경 변수 넣었는데도 OPENAI_API_KEY 오류가 나면:
+  - Variable 이름이 정확히 OPENAI_API_KEY 인지 (대소문자, 앞뒤 공백 없음)
+  - Production 체크 여부 (배포가 Production 인데 Preview 만 넣은 경우 등)
+  - 저장 후 Deployments → 해당 배포 ⋯ → Redeploy (환경 변수 추가 이전 빌드는 그대로일 수 있음)
+  - 코드는 런타임용으로 process.env 를 동적 키로 읽도록 수정됨 (번들러 치환 방지)

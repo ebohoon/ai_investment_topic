@@ -1,11 +1,12 @@
 import { MongoClient } from "mongodb";
+import { readRuntimeEnv } from "./runtimeEnv.js";
 
 const g = globalThis as typeof globalThis & {
   __aicc_mongo?: MongoClient | null;
 };
 
 async function getClient(): Promise<MongoClient | null> {
-  const uri = process.env.MONGODB_URI?.trim();
+  const uri = readRuntimeEnv("MONGODB_URI");
   if (!uri) return null;
 
   if (g.__aicc_mongo) {
@@ -26,8 +27,8 @@ export async function saveGeneratedSession(payload: {
   try {
     const c = await getClient();
     if (!c) return;
-    const dbName = process.env.MONGODB_DB ?? "aicc";
-    const collName = process.env.MONGODB_COLLECTION ?? "generated_sessions";
+    const dbName = readRuntimeEnv("MONGODB_DB") ?? "aicc";
+    const collName = readRuntimeEnv("MONGODB_COLLECTION") ?? "generated_sessions";
     await c.db(dbName).collection(collName).insertOne({
       createdAt: new Date(),
       ...payload,
