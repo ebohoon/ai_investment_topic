@@ -10,6 +10,7 @@ export type RecommendFormInput = {
   mbtiOrTrait: string;
   gradeLevel: string;
   performanceExperience: string;
+  constraintsNote: string;
 };
 
 /** 오류 메시지 또는 null(통과) */
@@ -55,6 +56,14 @@ export function validateRecommendForm(input: RecommendFormInput): string | null 
   }
   if (perf.length >= 2 && isOnlyRepeatedChar(perf)) {
     return "수행·탐구 경험에 의미 없는 반복 입력은 사용할 수 없습니다.";
+  }
+
+  const cons = input.constraintsNote.trim();
+  if (cons.length > 0 && cons.length < 5) {
+    return "탐구 조건·제약은 비워 두거나, 5글자 이상 구체적으로 입력해 주세요.";
+  }
+  if (cons.length >= 2 && isOnlyRepeatedChar(cons)) {
+    return "탐구 조건·제약에 의미 없는 반복 입력은 사용할 수 없습니다.";
   }
 
   return null;

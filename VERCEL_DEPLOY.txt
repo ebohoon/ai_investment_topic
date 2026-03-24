@@ -23,7 +23,7 @@ Vercel 배포
   - index.html 은 캐시하지 않도록 vercel.json headers 설정됨
 
 환경 변수 넣었는데도 OPENAI_API_KEY 오류가 나면:
-  - Variable 이름이 정확히 OPENAI_API_KEY 인지 (대소문자, 앞뒤 공백 없음)
-  - Production 체크 여부 (배포가 Production 인데 Preview 만 넣은 경우 등)
-  - 저장 후 Deployments → 해당 배포 ⋯ → Redeploy (환경 변수 추가 이전 빌드는 그대로일 수 있음)
-  - 코드는 런타임용으로 process.env 를 동적 키로 읽도록 수정됨 (번들러 치환 방지)
+  - 이름이 정확히 OPENAI_API_KEY 인지 (대소문자, 값 앞뒤 공백·따옴표 없음)
+  - 접속 URL이 Production 인데 변수는 Preview 에만 있거나 그 반대인지 → 둘 다 체크하거나 맞는 쪽에만 넣기
+  - 저장 후 Deployments → 최신 배포 ⋯ → Redeploy (변수 추가 후 재배포 필수)
+  - 런타임은 OPENAI_API_KEY 등을 명시적 process.env 로도 읽음 (Vercel 번들에서 동적 env[key] 가 비는 경우 대비)

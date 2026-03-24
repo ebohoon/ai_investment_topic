@@ -31,6 +31,20 @@ const keywordSchema = z
       })
   );
 
+const inquiryStyleSchema = z.preprocess(
+  (v) => (v === "" || v === null || v === undefined ? undefined : v),
+  z
+    .enum([
+      "실험·관찰",
+      "설문·인터뷰",
+      "데이터·코딩·분석",
+      "독서·에세이·발표",
+      "사회이슈·정책 조사",
+      "상관없음",
+    ])
+    .optional()
+);
+
 export const recommendBodySchema = z
   .object({
     major: majorSchema,
@@ -41,6 +55,8 @@ export const recommendBodySchema = z
     mbtiOrTrait: z.string().max(100).optional(),
     gradeLevel: z.string().max(100).optional(),
     performanceExperience: z.string().max(500).optional(),
+    inquiryStyle: inquiryStyleSchema,
+    constraintsNote: z.string().max(200).optional(),
   })
   .superRefine((d, ctx) => {
     const checkOptionalShort = (
@@ -85,6 +101,24 @@ export const recommendBodySchema = z
           code: z.ZodIssueCode.custom,
           message: "수행·탐구 경험에 의미 없는 반복 입력은 사용할 수 없습니다.",
           path: ["performanceExperience"],
+        });
+      }
+    }
+
+    if (d.constraintsNote !== undefined) {
+      const t = d.constraintsNote.trim();
+      if (t.length > 0 && t.length < 5) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "탐구 조건·제약은 비워 두거나, 5글자 이상 구체적으로 입력해 주세요.",
+          path: ["constraintsNote"],
+        });
+      } else if (t.length >= 2 && isOnlyRepeatedChar(t)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "탐구 조건·제약에 의미 없는 반복 입력은 사용할 수 없습니다.",
+          path: ["constraintsNote"],
         });
       }
     }

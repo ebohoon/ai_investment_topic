@@ -15,23 +15,35 @@ function buildUserContent(body: RecommendBody, allowedSubjects: string[]): strin
     body.performanceExperience
       ? `수행평가·탐구 경험: ${body.performanceExperience}`
       : null,
+    body.inquiryStyle ? `희망 탐구 방식: ${body.inquiryStyle}` : null,
+    body.constraintsNote ? `기간·장소·혼자/모둠 등 조건: ${body.constraintsNote}` : null,
   ]
     .filter(Boolean)
     .join("\n");
+
+  const gradeDepth =
+    body.grade === "중3"
+      ? "학년 수준: 중3—탐구 깊이·분량은 중학교 수행평가에 맞게 조정."
+      : body.grade === "고1"
+        ? "학년 수준: 고1—기초 탐구·과정 서술을 충실히, 결과의 과장을 피할 것."
+        : "학년 수준: 고2—고등학교 교과 세특·수행에 연결 가능한 구체적 과정을 강조.";
 
   const profile = [
     "학생 프로필:",
     `희망 전공: ${body.major}`,
     `관심 키워드(3): ${body.keywords.join(", ")}`,
     `학년: ${body.grade}`,
+    gradeDepth,
     opt || "추가 선택 정보: 없음",
     "",
     "교과 연계(subjects)는 반드시 아래 후보 문자열과 정확히 일치하는 값만 사용:",
     allowedSubjects.join(", "),
     "",
-    "출력 형식은 시스템이 강제하는 JSON 스키마를 따른다. methods는 실행 가능한 구체 단계만, recordSentence는 생기부 톤으로 과장 없이.",
+    "정책·평가 맥락: 고교학점제·과정중심 수행평가·학교생활기록부 기재요령의 취지에 맞게, 실제 수행·관찰 가능한 과정을 제시한다. 입시 합격 전략·내신 등급 조작을 암시하는 표현은 금지.",
     "",
-    "위 프로필에 맞는 탐구 주제를 3~5개 생성하세요. 주제 간 중복을 피하고 다양하게.",
+    "출력은 시스템 JSON 스키마를 따른다. researchQuestion·processChecklist·aiEthicsNote·recordSentence를 빠짐없이 채운다. recordSentence는 참고용 초안이며 미수행을 단정하지 않는다.",
+    "",
+    "위 프로필에 맞는 탐구 주제를 3~5개 생성하세요. 주제 간 중복을 피하고, 탐구 유형을 다양하게 섞을 것.",
   ].join("\n");
 
   return [
@@ -94,7 +106,8 @@ export async function generateRecommendations(
   if (!key) {
     throw new Error(
       "OPENAI_API_KEY가 설정되지 않았습니다. " +
-        "로컬: client/server/.env | Vercel: Project → Settings → Environment Variables 에 OPENAI_API_KEY 등록 후 재배포."
+        "로컬: client/server/.env 파일 | Vercel: Settings → Environment Variables 에 이름을 정확히 OPENAI_API_KEY 로 두고, " +
+        "Production·Preview 등 실제 접속하는 환경에 체크한 뒤 반드시 Redeploy 하세요. (변수 추가만 하고 재배포하지 않으면 이전 빌드에는 반영되지 않습니다.)"
     );
   }
 

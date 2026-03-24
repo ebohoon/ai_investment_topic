@@ -42,6 +42,22 @@ export function buildRecommendResponseJsonSchema(allowedSubjects: string[]) {
               maxItems: 5,
               items: { type: "string", minLength: 2 },
             },
+            researchQuestion: {
+              type: "string",
+              minLength: 8,
+              maxLength: 300,
+            },
+            processChecklist: {
+              type: "array",
+              minItems: 3,
+              maxItems: 8,
+              items: { type: "string", minLength: 3 },
+            },
+            aiEthicsNote: {
+              type: "string",
+              minLength: 30,
+              maxLength: 800,
+            },
             recordSentence: {
               type: "string",
               minLength: 20,
@@ -53,6 +69,9 @@ export function buildRecommendResponseJsonSchema(allowedSubjects: string[]) {
             "subjects",
             "methods",
             "deliverables",
+            "researchQuestion",
+            "processChecklist",
+            "aiEthicsNote",
             "recordSentence",
           ],
         },
