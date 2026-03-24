@@ -92,7 +92,8 @@ export async function generateRecommendations(
   const key = process.env.OPENAI_API_KEY;
   if (!key) {
     throw new Error(
-      "OPENAI_API_KEY가 설정되지 않았습니다. client/server/.env 파일을 확인하세요."
+      "OPENAI_API_KEY가 설정되지 않았습니다. " +
+        "로컬: client/server/.env | Vercel: Project → Settings → Environment Variables 에 OPENAI_API_KEY 등록 후 재배포."
     );
   }
 
