@@ -1,5 +1,4 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
   "installCommand": "npm install",
   "buildCommand": "npm run build -w aicc-client",
   "outputDirectory": "client/dist",
@@ -26,6 +25,12 @@
   "functions": {
     "client/api/recommend.ts": {
       "maxDuration": 60
+    },
+    "client/api/recommend-questions.ts": {
+      "maxDuration": 60
+    },
+    "client/api/recommend-design.ts": {
+      "maxDuration": 120
     }
   }
 }

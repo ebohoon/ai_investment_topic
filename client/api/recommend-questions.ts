@@ -1,9 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { runDesign } from "../../server/src/handlers/designHandler.js";
+import { runQuestions } from "../server/src/handlers/questionsHandler.js";
 
 export const config = {
-  /** 선택 질문마다 별도 생성하므로 최대 5회 호출까지 고려 */
-  maxDuration: 120,
+  maxDuration: 60,
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -19,6 +18,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const out = await runDesign(req.body);
+  const out = await runQuestions(req.body);
   return res.status(out.status).json(out.body);
 }

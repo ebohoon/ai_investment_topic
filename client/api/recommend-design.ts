@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { runQuestions } from "../../server/src/handlers/questionsHandler.js";
+import { runDesign } from "../server/src/handlers/designHandler.js";
 
 export const config = {
-  maxDuration: 60,
+  maxDuration: 120,
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -18,6 +18,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const out = await runQuestions(req.body);
+  const out = await runDesign(req.body);
   return res.status(out.status).json(out.body);
 }

@@ -19,3 +19,14 @@ recommendRouter.post("/recommend/design", async (req, res) => {
   const out = await runDesign(req.body);
   res.status(out.status).json(out.body);
 });
+
+/** Vercel 평면 API 경로와 동일 (로컬 프록시 호환) */
+recommendRouter.post("/recommend-questions", async (req, res) => {
+  const out = await runQuestions(req.body);
+  res.status(out.status).json(out.body);
+});
+
+recommendRouter.post("/recommend-design", async (req, res) => {
+  const out = await runDesign(req.body);
+  res.status(out.status).json(out.body);
+});

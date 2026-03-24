@@ -138,7 +138,7 @@ export async function fetchResearchQuestions(
 ): Promise<QuestionsApiResponse> {
   let res: Response;
   try {
-    res = await fetch(`${apiBase}/api/recommend/questions`, {
+    res = await fetch(`${apiBase}/api/recommend-questions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(explorationJsonBody(body)),
@@ -168,7 +168,7 @@ export async function fetchExplorationDesign(
     .filter((q) => q.length > 0);
   let res: Response;
   try {
-    res = await fetch(`${apiBase}/api/recommend/design`, {
+    res = await fetch(`${apiBase}/api/recommend-design`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
