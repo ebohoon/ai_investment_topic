@@ -5,6 +5,7 @@ import {
   type RecommendApiResponse,
   type TopicCard,
 } from "./api";
+import { validateRecommendForm } from "./validateRecommendInput";
 
 function logEvent(name: string, detail?: Record<string, string>) {
   if (import.meta.env.DEV) {
@@ -84,12 +85,15 @@ export default function App() {
     setError(null);
     setResult(null);
     const keywords = [k1.trim(), k2.trim(), k3.trim()] as [string, string, string];
-    if (keywords.some((k) => !k)) {
-      setError("관심 키워드를 세 칸 모두 입력하세요.");
-      return;
-    }
-    if (!major.trim()) {
-      setError("희망 전공을 입력하세요.");
+    const clientErr = validateRecommendForm({
+      major,
+      keywords,
+      mbtiOrTrait: mbti,
+      gradeLevel,
+      performanceExperience: perf,
+    });
+    if (clientErr) {
+      setError(clientErr);
       return;
     }
     logEvent("generate_click");
