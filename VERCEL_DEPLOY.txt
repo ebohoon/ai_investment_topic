@@ -1,20 +1,18 @@
-Vercel 배포 체크리스트 (이 저장소는 모노레포)
+Vercel 배포
 
-[필수] Root Directory
-  Vercel → Project → Settings → General → Root Directory
-  → 반드시 "비움" (저장소 루트 = ai_investment_topic 클론 최상위)
-  → client 로 두면 안 됩니다.
+[권장] Root Directory = 비움 (Git 저장소 루트)
+  - 루트 package.json + package-lock.json 이 함께 배포됨
+  - vercel.json: build npm run build -w aicc-client, output client/dist
+  - API: client/api/recommend.ts
 
-  증상: Install 단계에서 패키지가 ~70개만 설치됨 (client만 설치된 것)
-  정상: workspaces 때문에 패키지가 훨씬 많이 설치됨 (수백 개 근처)
+[가능] Root Directory = client
+  - client 폴더만 올라가도, 그 안에 server 소스 + api 가 포함됨
+  - client/package.json 에 API용 의존성(openai, zod, mongodb, @vercel/node) 포함
+  - client/vercel.json: build npm run build, output dist
+  - 이 경우 루트 vercel.json 은 사용되지 않음
 
-[필수] Build / Output 오버라이드 끄기
-  Settings → Build & Development Settings
-  → Build Command, Output Directory, Install Command 의 Override 를 끄거나
-  → 저장소 루트의 vercel.json 과 동일하게 맞추기
+이전 에러(client/client/package.json)는 Root 가 client 인데
+빌드 명령이 또 ./client 를 붙여서 생긴 것이었습니다.
+지금은 Root 가 client 일 때는 client/vercel.json 이 npm run build 만 사용합니다.
 
-[환경 변수]
-  OPENAI_API_KEY, MONGODB_URI (선택) 등은 Vercel Environment Variables 에 등록
-
-이유: api/recommend.ts 와 server 코드는 저장소 루트에 있습니다.
-      Root 를 client 로 하면 해당 파일이 배포에 포함되지 않고, 빌드 경로도 깨집니다.
+로컬 API .env 위치: client/server/.env (이전 server/.env 는 여기로 옮기세요)
