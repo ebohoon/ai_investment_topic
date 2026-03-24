@@ -3,6 +3,26 @@
   "installCommand": "npm install",
   "buildCommand": "npm run build -w aicc-client",
   "outputDirectory": "client/dist",
+  "headers": [
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    }
+  ],
   "functions": {
     "client/api/recommend.ts": {
       "maxDuration": 60

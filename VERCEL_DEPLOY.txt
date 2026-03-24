@@ -17,6 +17,11 @@ Vercel 배포
 
 로컬 API .env 위치: client/server/.env (이전 server/.env 는 여기로 옮기세요)
 
+최신 코드(입력 검증 등)가 사이트에 안 보일 때:
+  - Deployments → 최신 커밋으로 Redeploy
+  - 브라우저 강력 새로고침 (Ctrl+Shift+R)
+  - index.html 은 캐시하지 않도록 vercel.json headers 설정됨
+
 환경 변수 넣었는데도 OPENAI_API_KEY 오류가 나면:
   - Variable 이름이 정확히 OPENAI_API_KEY 인지 (대소문자, 앞뒤 공백 없음)
   - Production 체크 여부 (배포가 Production 인데 Preview 만 넣은 경우 등)
