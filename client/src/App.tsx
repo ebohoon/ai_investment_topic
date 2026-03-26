@@ -802,27 +802,11 @@ export default function App() {
                 <div>
                   <h2 id="sec-s1">STEP 1 — 교과·기본 정보</h2>
                   <p className="section-desc">
-                    먼저 희망 전공과 현재 학년을 고른 뒤, 학년에 맞는 교과(군)와 과목을 선택합니다.
+                    먼저 현재 학년과 희망 전공을 고른 뒤, 학년에 맞는 교과(군)와 과목을 선택합니다.
                   </p>
                 </div>
               </div>
               <div className="form-grid cols-2">
-                <div className="field">
-                  <label className="field-label" htmlFor="major">
-                    희망 전공
-                    <span className="badge-req">필수</span>
-                  </label>
-                  <input
-                    id="major"
-                    className="input-base"
-                    type="text"
-                    value={major}
-                    onChange={(e) => setMajor(e.target.value)}
-                    placeholder="컴퓨터공학, 심리학 등"
-                    maxLength={200}
-                    autoComplete="off"
-                  />
-                </div>
                 <div className="field">
                   <label className="field-label" htmlFor="grade">
                     현재 학년
@@ -850,6 +834,22 @@ export default function App() {
                       </option>
                     ))}
                   </select>
+                </div>
+                <div className="field">
+                  <label className="field-label" htmlFor="major">
+                    희망 전공
+                    <span className="badge-req">필수</span>
+                  </label>
+                  <input
+                    id="major"
+                    className="input-base"
+                    type="text"
+                    value={major}
+                    onChange={(e) => setMajor(e.target.value)}
+                    placeholder="컴퓨터공학, 심리학 등"
+                    maxLength={200}
+                    autoComplete="off"
+                  />
                 </div>
 
                 <div className="field field--full">
