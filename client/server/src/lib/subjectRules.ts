@@ -8,6 +8,7 @@ const SUBJECT_POOL = [
   "미술",
   "음악",
   "체육",
+  "기술·가정",
 ] as const;
 
 export type SubjectLabel = (typeof SUBJECT_POOL)[number];
@@ -22,6 +23,7 @@ const MAJOR_RULES: { pattern: RegExp; add: SubjectLabel[] }[] = [
   { pattern: /미술|디자인|건축/i, add: ["미술", "수학"] },
   { pattern: /음악|실용음악/i, add: ["음악", "국어"] },
   { pattern: /체육|스포츠/i, add: ["체육", "과학(통합과학/물화생지)"] },
+  { pattern: /가정|요리|패션|바느질|식품|영양/i, add: ["기술·가정", "과학(통합과학/물화생지)"] },
   { pattern: /화학|생명|바이오|환경/i, add: ["과학(통합과학/물화생지)", "수학"] },
   { pattern: /물리|천문/i, add: ["과학(통합과학/물화생지)", "수학"] },
   { pattern: /지리/i, add: ["사회(한국사/통합사회)", "과학(통합과학/물화생지)"] },
@@ -36,6 +38,7 @@ const KEYWORD_RULES: { pattern: RegExp; add: SubjectLabel[] }[] = [
   { pattern: /미술|시각|디자인|색/i, add: ["미술"] },
   { pattern: /음악|악기|작곡/i, add: ["음악"] },
   { pattern: /운동|체력|부상|스포츠과학/i, add: ["체육", "과학(통합과학/물화생지)"] },
+  { pattern: /요리|가정|바느질|패션|영양|식품/i, add: ["기술·가정"] },
 ];
 
 function uniq(items: SubjectLabel[]): SubjectLabel[] {
@@ -76,12 +79,18 @@ export const CURRICULUM_SUBJECT_UI = [
   "사회",
   "과학",
   "정보",
+  "체육",
+  "예술",
+  "기술·가정",
   "기타",
 ] as const;
 
 export type CurriculumSubjectUi = (typeof CURRICULUM_SUBJECT_UI)[number];
 
-function mapUiSubjectToPool(ui: CurriculumSubjectUi): SubjectLabel[] {
+function mapUiSubjectToPool(
+  ui: CurriculumSubjectUi,
+  courseName?: string | undefined
+): SubjectLabel[] {
   switch (ui) {
     case "국어":
       return ["국어"];
@@ -95,6 +104,16 @@ function mapUiSubjectToPool(ui: CurriculumSubjectUi): SubjectLabel[] {
       return ["과학(통합과학/물화생지)"];
     case "정보":
       return ["정보"];
+    case "체육":
+      return ["체육"];
+    case "예술": {
+      const c = courseName?.trim();
+      if (c === "음악") return ["음악"];
+      if (c === "미술") return ["미술"];
+      return ["음악", "미술"];
+    }
+    case "기술·가정":
+      return ["기술·가정"];
     case "기타":
       return [];
     default:
@@ -106,9 +125,10 @@ function mapUiSubjectToPool(ui: CurriculumSubjectUi): SubjectLabel[] {
 export function resolveAllowedSubjectsWithCurriculum(
   uiSubject: CurriculumSubjectUi,
   major: string,
-  keywords: string[]
+  keywords: string[],
+  courseName?: string | undefined
 ): string[] {
-  const fromUi = mapUiSubjectToPool(uiSubject);
+  const fromUi = mapUiSubjectToPool(uiSubject, courseName);
   const fromRules = resolveAllowedSubjects(major, keywords) as SubjectLabel[];
   let merged = uniq([...fromUi, ...fromRules]);
   if (merged.length < 3) {

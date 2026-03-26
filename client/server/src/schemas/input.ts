@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { COURSE_CATEGORY_OPTIONS } from "../lib/curriculumCategories.js";
+import {
+  isMiddleSchoolGrade,
+  isValidMiddleCurriculum,
+} from "../lib/middleCurriculum.js";
 import { CURRICULUM_SUBJECT_UI } from "../lib/subjectRules.js";
 
 /** 같은 문자만 2번 이상 반복 → "dd", "ㅋㅋ", "11" 등 */
@@ -125,18 +129,17 @@ const mbtiOrTraitStrictSchema = z
       })
   );
 
-const performanceExperienceStrictSchema = z
-  .string()
-  .transform((s) => s.trim())
-  .pipe(
-    z
-      .string()
-      .min(5, "수행·탐구 경험을 5글자 이상 입력해 주세요.")
-      .max(500)
-      .refine((s) => !isOnlyRepeatedChar(s), {
-        message: "수행·탐구 경험에 의미 없는 반복 입력은 사용할 수 없습니다.",
-      })
-  );
+const performanceExperienceExplorationOptionalSchema = z.preprocess(
+  (v) => {
+    if (v === "" || v === null || v === undefined) return undefined;
+    const t = String(v).trim();
+    return t.length === 0 ? undefined : t;
+  },
+  z
+    .string()
+    .max(500, "수행·탐구 경험은 500자 이내로 입력해 주세요.")
+    .optional()
+);
 
 const inquiryStyleStrictSchema = z.enum(
   [
@@ -172,25 +175,60 @@ const constraintsExtraOptionalSchema = z.preprocess(
   z.string().max(120).optional()
 );
 
-function refineExplorationConstraintsExtraOnly(
-  d: { constraintsExtra?: string },
+const interestTopicDetailOptionalSchema = z.preprocess(
+  (v) => {
+    if (v === "" || v === null || v === undefined) return undefined;
+    const t = String(v).trim();
+    return t.length === 0 ? undefined : t;
+  },
+  z.string().max(800).optional()
+);
+
+function refineOptionalLongField(
+  val: string | undefined,
+  path: string,
+  label: string,
   ctx: z.RefinementCtx
 ) {
-  if (d.constraintsExtra === undefined) return;
-  const t = d.constraintsExtra.trim();
+  if (val === undefined) return;
+  const t = val.trim();
+  if (t.length === 0) return;
   if (t.length > 0 && t.length < 5) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "기타 조건은 비워 두거나, 5글자 이상 구체적으로 입력해 주세요.",
-      path: ["constraintsExtra"],
+      message: `${label}은(는) 비워 두거나, 5글자 이상 구체적으로 입력해 주세요.`,
+      path: [path],
     });
   } else if (t.length >= 2 && isOnlyRepeatedChar(t)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "기타 조건에 의미 없는 반복 입력은 사용할 수 없습니다.",
-      path: ["constraintsExtra"],
+      message: `${label}에 의미 없는 반복 입력은 사용할 수 없습니다.`,
+      path: [path],
     });
   }
+}
+
+function refineExplorationConstraintsExtraOnly(
+  d: {
+    constraintsExtra?: string;
+    interestTopicDetail?: string;
+    performanceExperience?: string;
+  },
+  ctx: z.RefinementCtx
+) {
+  refineOptionalLongField(d.constraintsExtra, "constraintsExtra", "기타 조건", ctx);
+  refineOptionalLongField(
+    d.interestTopicDetail,
+    "interestTopicDetail",
+    "관심 주제 상세",
+    ctx
+  );
+  refineOptionalLongField(
+    d.performanceExperience,
+    "performanceExperience",
+    "수행·탐구 경험",
+    ctx
+  );
 }
 
 /** 프론트 학년 선택과 동일하게 유지 */
@@ -209,13 +247,14 @@ export const explorationRecommendCoreObjectSchema = z.object({
   grade: gradeSchema,
   mbtiOrTrait: mbtiOrTraitStrictSchema,
   gradeLevel: gradeLevelStrictSchema,
-  performanceExperience: performanceExperienceStrictSchema,
+  performanceExperience: performanceExperienceExplorationOptionalSchema,
   inquiryStyle: inquiryStyleStrictSchema,
   constraintPeriod: constraintPeriodStrictSchema,
   constraintPlace: constraintPlaceStrictSchema,
   constraintTeam: constraintTeamStrictSchema,
   constraintBudget: constraintBudgetStrictSchema,
   constraintsExtra: constraintsExtraOptionalSchema,
+  interestTopicDetail: interestTopicDetailOptionalSchema,
 });
 
 const recommendCoreObjectSchema = z.object({
@@ -233,6 +272,7 @@ const recommendCoreObjectSchema = z.object({
   constraintTeam: constraintTeamSchema,
   constraintBudget: constraintBudgetSchema,
   constraintsExtra: z.string().max(120).optional(),
+  interestTopicDetail: z.string().max(800).optional(),
 });
 
 function refineRecommendFields(
@@ -302,6 +342,24 @@ function refineRecommendFields(
         });
       }
     }
+
+    if (d.interestTopicDetail !== undefined) {
+      const t = d.interestTopicDetail.trim();
+      if (t.length > 0 && t.length < 5) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message:
+            "관심 주제 상세는 비워 두거나, 5글자 이상 구체적으로 입력해 주세요.",
+          path: ["interestTopicDetail"],
+        });
+      } else if (t.length >= 2 && isOnlyRepeatedChar(t)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: "관심 주제 상세에 의미 없는 반복 입력은 사용할 수 없습니다.",
+          path: ["interestTopicDetail"],
+        });
+      }
+    }
 }
 
 export const recommendBodySchema =
@@ -349,12 +407,26 @@ const courseNameSchema = z.preprocess(
 
 function refineExplorationCurriculum(
   d: {
+    grade: (typeof GRADE_OPTIONS)[number];
     selectedSubject: (typeof CURRICULUM_SUBJECT_UI)[number];
     courseCategory?: string;
     courseName?: string;
   },
   ctx: z.RefinementCtx
 ) {
+  const middleOnly =
+    d.selectedSubject === "체육" ||
+    d.selectedSubject === "예술" ||
+    d.selectedSubject === "기술·가정";
+  if (!isMiddleSchoolGrade(d.grade) && middleOnly) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "체육·예술·기술·가정 교과(군)은 중학교 학년에서만 선택할 수 있습니다.",
+      path: ["selectedSubject"],
+    });
+    return;
+  }
+
   if (d.selectedSubject === "기타") {
     const n = d.courseName?.trim() ?? "";
     if (n.length < 2) {
@@ -370,14 +442,10 @@ function refineExplorationCurriculum(
         path: ["courseName"],
       });
     }
-  } else {
-    if (!d.courseCategory) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "과목 분류(공통·일반·진로·융합)를 선택하세요.",
-        path: ["courseCategory"],
-      });
-    }
+    return;
+  }
+
+  if (isMiddleSchoolGrade(d.grade)) {
     const cn = d.courseName?.trim() ?? "";
     if (!cn) {
       ctx.addIssue({
@@ -391,7 +459,36 @@ function refineExplorationCurriculum(
         message: "과목명에 의미 없는 반복 입력은 사용할 수 없습니다.",
         path: ["courseName"],
       });
+    } else if (!isValidMiddleCurriculum(d.selectedSubject, cn)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "선택한 교과(군)에 맞는 과목명을 고르세요.",
+        path: ["courseName"],
+      });
     }
+    return;
+  }
+
+  if (!d.courseCategory) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "과목 분류(공통·일반·진로·융합)를 선택하세요.",
+      path: ["courseCategory"],
+    });
+  }
+  const cn = d.courseName?.trim() ?? "";
+  if (!cn) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "교과 과목명을 선택하세요.",
+      path: ["courseName"],
+    });
+  } else if (isOnlyRepeatedChar(cn)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "과목명에 의미 없는 반복 입력은 사용할 수 없습니다.",
+      path: ["courseName"],
+    });
   }
 }
 

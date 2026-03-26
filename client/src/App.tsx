@@ -17,9 +17,14 @@ import {
 import {
   COURSE_CATEGORY_OPTIONS,
   getCourseNames,
+  getMiddleSchoolCourseNames,
+  isMiddleSchoolGrade,
+  MIDDLE_SUBJECT_GROUP_KEYS,
+  MIDDLE_SUBJECT_GROUP_LABELS,
   SUBJECT_GROUP_LABELS,
   SUBJECT_GROUP_KEYS,
   type CourseCategory,
+  type MiddleSubjectGroupKey,
   type SubjectGroupKey,
 } from "./curriculumData";
 import {
@@ -362,6 +367,7 @@ export default function App() {
   const [k1, setK1] = useState("");
   const [k2, setK2] = useState("");
   const [k3, setK3] = useState("");
+  const [interestTopicDetail, setInterestTopicDetail] = useState("");
   const [mbtiSelect, setMbtiSelect] = useState<string>("");
   const [mbtiCustom, setMbtiCustom] = useState("");
   const [gradeLevel, setGradeLevel] = useState("");
@@ -404,17 +410,28 @@ export default function App() {
       gradeLevel,
       performanceExperience: perf,
       constraintsExtra,
+      interestTopicDetail,
     }),
-    [major, k1, k2, k3, mbtiResolved, gradeLevel, perf, constraintsExtra]
+    [major, k1, k2, k3, mbtiResolved, gradeLevel, perf, constraintsExtra, interestTopicDetail]
   );
 
+  const isMiddleGrade = useMemo(() => isMiddleSchoolGrade(grade), [grade]);
+
+  const subjectKeysForGrade = isMiddleGrade ? MIDDLE_SUBJECT_GROUP_KEYS : SUBJECT_GROUP_KEYS;
+
   const courseNameOptions = useMemo(() => {
-    if (!selectedSubject || selectedSubject === "기타" || !courseCategory) return [];
+    if (!selectedSubject || selectedSubject === "기타") return [];
+    if (isMiddleGrade) {
+      return getMiddleSchoolCourseNames(
+        selectedSubject as Exclude<MiddleSubjectGroupKey, "기타">
+      );
+    }
+    if (!courseCategory) return [];
     return getCourseNames(
       selectedSubject as Exclude<SubjectGroupKey, "기타">,
       courseCategory as CourseCategory
     );
-  }, [selectedSubject, courseCategory]);
+  }, [selectedSubject, courseCategory, isMiddleGrade]);
 
   const explorationPayload = useCallback((): ExplorationPayload => {
     return {
@@ -423,15 +440,19 @@ export default function App() {
       grade,
       mbtiOrTrait: mbtiResolved.trim(),
       gradeLevel: gradeLevel.trim(),
-      performanceExperience: perf.trim(),
+      performanceExperience: perf.trim() || undefined,
       inquiryStyle: inquiryStyle.trim(),
       constraintPeriod: constraintPeriod.trim(),
       constraintPlace: constraintPlace.trim(),
       constraintTeam: constraintTeam.trim(),
       constraintBudget: constraintBudget.trim(),
       constraintsExtra: constraintsExtra.trim() || undefined,
+      interestTopicDetail: interestTopicDetail.trim() || undefined,
       selectedSubject,
-      courseCategory: selectedSubject === "기타" ? undefined : courseCategory.trim() || undefined,
+      courseCategory:
+        selectedSubject === "기타" || isMiddleGrade
+          ? undefined
+          : courseCategory.trim() || undefined,
       courseName: courseName.trim() || undefined,
       inquiryType,
       goalLevel,
@@ -444,6 +465,7 @@ export default function App() {
     k2,
     k3,
     grade,
+    isMiddleGrade,
     mbtiResolved,
     gradeLevel,
     perf,
@@ -453,6 +475,7 @@ export default function App() {
     constraintTeam,
     constraintBudget,
     constraintsExtra,
+    interestTopicDetail,
     selectedSubject,
     courseCategory,
     courseName,
@@ -482,6 +505,7 @@ export default function App() {
     setSelectedQuestionIdxs([]);
     setDesignSourceQuestions([]);
     setDesignResults([]);
+    setInterestTopicDetail("");
     setError(null);
   }, []);
 
@@ -523,6 +547,7 @@ export default function App() {
   const validateFullExploration = useCallback((): string | null => {
     return validateExplorationForm({
       ...recommendLike,
+      grade,
       inquiryStyle,
       constraintPeriod,
       constraintPlace,
@@ -538,6 +563,7 @@ export default function App() {
     });
   }, [
     recommendLike,
+    grade,
     inquiryStyle,
     constraintPeriod,
     constraintPlace,
@@ -776,11 +802,56 @@ export default function App() {
                 <div>
                   <h2 id="sec-s1">STEP 1 — 교과·기본 정보</h2>
                   <p className="section-desc">
-                    2022 개정 교육과정 기준으로 교과(군)·과목 분류·과목명을 고릅니다. 이후 탐구 설계에 반영됩니다.
+                    먼저 희망 전공과 현재 학년을 고른 뒤, 학년에 맞는 교과(군)와 과목을 선택합니다.
                   </p>
                 </div>
               </div>
               <div className="form-grid cols-2">
+                <div className="field">
+                  <label className="field-label" htmlFor="major">
+                    희망 전공
+                    <span className="badge-req">필수</span>
+                  </label>
+                  <input
+                    id="major"
+                    className="input-base"
+                    type="text"
+                    value={major}
+                    onChange={(e) => setMajor(e.target.value)}
+                    placeholder="컴퓨터공학, 심리학 등"
+                    maxLength={200}
+                    autoComplete="off"
+                  />
+                </div>
+                <div className="field">
+                  <label className="field-label" htmlFor="grade">
+                    현재 학년
+                    <span className="badge-req">필수</span>
+                  </label>
+                  <select
+                    id="grade"
+                    className="text-like input-base"
+                    value={grade}
+                    onChange={(e) => {
+                      const g = e.target.value;
+                      const wasMiddle = isMiddleSchoolGrade(grade);
+                      const nowMiddle = isMiddleSchoolGrade(g);
+                      setGrade(g);
+                      if (wasMiddle !== nowMiddle) {
+                        setSelectedSubject("");
+                        setCourseCategory("");
+                        setCourseName("");
+                      }
+                    }}
+                  >
+                    {SCHOOL_GRADES.map((g) => (
+                      <option key={g} value={g}>
+                        {g}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="field field--full">
                   <label className="field-label" htmlFor="subject">
                     교과(군)
@@ -797,16 +868,45 @@ export default function App() {
                     }}
                   >
                     <option value="">교과(군)을 선택하세요</option>
-                    {SUBJECT_GROUP_KEYS.map((s) => (
+                    {subjectKeysForGrade.map((s) => (
                       <option key={s} value={s}>
-                        {SUBJECT_GROUP_LABELS[s]}
+                        {isMiddleGrade
+                          ? MIDDLE_SUBJECT_GROUP_LABELS[s as MiddleSubjectGroupKey]
+                          : SUBJECT_GROUP_LABELS[s as SubjectGroupKey]}
                       </option>
                     ))}
                   </select>
-                  <span className="field-hint">국·수·영·사·과는 표준 분류, 정보는 개정 과목 예시, 기타는 예체능·융합 등 직접 입력.</span>
+                  <span className="field-hint">
+                    {isMiddleGrade
+                      ? "중학교 과정: 교과(군)별로 정해진 과목명 중에서 선택합니다."
+                      : "고등학교: 국·수·영·사·과·정보·기타. 기타는 예체능·융합 등 직접 입력합니다."}
+                  </span>
                 </div>
 
-                {selectedSubject && selectedSubject !== "기타" && (
+                {selectedSubject && selectedSubject !== "기타" && isMiddleGrade && (
+                  <div className="field field--full">
+                    <label className="field-label" htmlFor="course-name-ms">
+                      과목명
+                      <span className="badge-req">필수</span>
+                    </label>
+                    <select
+                      id="course-name-ms"
+                      className="text-like input-base"
+                      value={courseName}
+                      onChange={(e) => setCourseName(e.target.value)}
+                    >
+                      <option value="">과목명 선택</option>
+                      {courseNameOptions.map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="field-hint">학교 개설 명칭이 다르면 가장 가까운 항목을 고르세요.</span>
+                  </div>
+                )}
+
+                {selectedSubject && selectedSubject !== "기타" && !isMiddleGrade && (
                   <>
                     <div className="field field--full">
                       <label className="field-label" htmlFor="course-category">
@@ -873,41 +973,6 @@ export default function App() {
                     />
                   </div>
                 )}
-
-                <div className="field">
-                  <label className="field-label" htmlFor="major">
-                    희망 전공
-                    <span className="badge-req">필수</span>
-                  </label>
-                  <input
-                    id="major"
-                    className="input-base"
-                    type="text"
-                    value={major}
-                    onChange={(e) => setMajor(e.target.value)}
-                    placeholder="컴퓨터공학, 심리학 등"
-                    maxLength={200}
-                    autoComplete="off"
-                  />
-                </div>
-                <div className="field">
-                  <label className="field-label" htmlFor="grade">
-                    현재 학년
-                    <span className="badge-req">필수</span>
-                  </label>
-                  <select
-                    id="grade"
-                    className="text-like input-base"
-                    value={grade}
-                    onChange={(e) => setGrade(e.target.value)}
-                  >
-                    {SCHOOL_GRADES.map((g) => (
-                      <option key={g} value={g}>
-                        {g}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
             </section>
           )}
@@ -977,6 +1042,25 @@ export default function App() {
                         />
                       </div>
                     </div>
+                  </div>
+                  <div className="field field--full">
+                    <label className="field-label" htmlFor="interestTopicDetail">
+                      관심 주제 상세
+                      <span className="badge-opt">선택</span>
+                    </label>
+                    <span className="field-hint" style={{ marginTop: 0 }}>
+                      키워드만으로 부족하면, 구체적으로 관심 분야·궁금한 점·하고 싶은 탐구 방향을 적어 주세요.
+                    </span>
+                    <textarea
+                      id="interestTopicDetail"
+                      className="input-base"
+                      value={interestTopicDetail}
+                      onChange={(e) => setInterestTopicDetail(e.target.value)}
+                      placeholder="예: 뇌과학과 학습 집중의 관계를 알아보고 싶고, 학교 도서관에서 찾을 수 있는 대중도서와 논문 요약 위주로 시작하려고 합니다."
+                      maxLength={800}
+                      rows={4}
+                      autoComplete="off"
+                    />
                   </div>
                   <div className="form-grid cols-2">
                     <div className="field">
@@ -1218,20 +1302,22 @@ export default function App() {
                   </span>
                   <div>
                     <h2 id="sec-s2c">경험</h2>
-                    <p className="section-desc">이전 수행·탐구 경험을 적어 주세요.</p>
+                    <p className="section-desc">
+                      이전 수행·탐구 경험이 있으면 적어 주세요. 없으면 비워 두어도 됩니다.
+                    </p>
                   </div>
                 </div>
                 <div className="field">
                   <label className="field-label" htmlFor="perf">
                     수행평가·탐구 경험
-                    <span className="badge-req">필수</span>
+                    <span className="badge-opt">선택</span>
                   </label>
                   <textarea
                     id="perf"
                     className="input-base"
                     value={perf}
                     onChange={(e) => setPerf(e.target.value)}
-                    placeholder="5글자 이상, 예: 과학 수행에서 실험 설계·보고서 작성 등"
+                    placeholder="비워 두거나 5글자 이상, 예: 과학 수행에서 실험 설계·보고서 작성 등"
                     maxLength={500}
                     rows={3}
                   />

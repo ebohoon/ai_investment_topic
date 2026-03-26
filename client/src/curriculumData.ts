@@ -25,6 +25,54 @@ export const SUBJECT_GROUP_KEYS = [
 
 export type SubjectGroupKey = (typeof SUBJECT_GROUP_KEYS)[number];
 
+/** 중학교(중1~3) 교과(군) — 과목 분류 없이 과목명만 선택 */
+export const MIDDLE_SUBJECT_GROUP_KEYS = [
+  "국어",
+  "수학",
+  "사회",
+  "과학",
+  "영어",
+  "체육",
+  "예술",
+  "기술·가정",
+  "정보",
+  "기타",
+] as const;
+
+export type MiddleSubjectGroupKey = (typeof MIDDLE_SUBJECT_GROUP_KEYS)[number];
+
+/** 2022 개정 중학 교과(군) → 과목명 (서버 middleCurriculum.ts 와 동기화) */
+const MIDDLE_SUBJECT_TO_COURSES: Record<
+  Exclude<MiddleSubjectGroupKey, "기타">,
+  readonly string[]
+> = {
+  국어: ["국어"],
+  수학: ["수학"],
+  사회: ["사회", "역사"],
+  과학: ["과학"],
+  영어: ["영어"],
+  체육: ["체육"],
+  예술: ["음악", "미술"],
+  "기술·가정": ["기술·가정"],
+  정보: ["정보"],
+};
+
+export function isMiddleSchoolGrade(grade: string): boolean {
+  return /^중[123]$/.test(grade.trim());
+}
+
+export function getMiddleSchoolCourseNames(
+  group: Exclude<MiddleSubjectGroupKey, "기타">
+): string[] {
+  return [...MIDDLE_SUBJECT_TO_COURSES[group]];
+}
+
+export function isValidMiddleSchoolCourse(subject: string, courseName: string): boolean {
+  const list = MIDDLE_SUBJECT_TO_COURSES[subject as Exclude<MiddleSubjectGroupKey, "기타">];
+  if (!list) return false;
+  return list.includes(courseName.trim());
+}
+
 /** 드롭다운 표시용 라벨 */
 export const SUBJECT_GROUP_LABELS: Record<SubjectGroupKey, string> = {
   국어: "국어",
@@ -32,6 +80,19 @@ export const SUBJECT_GROUP_LABELS: Record<SubjectGroupKey, string> = {
   영어: "영어",
   사회: "사회 (역사·도덕 포함)",
   과학: "과학",
+  정보: "정보",
+  기타: "기타 (직접 입력)",
+};
+
+export const MIDDLE_SUBJECT_GROUP_LABELS: Record<MiddleSubjectGroupKey, string> = {
+  국어: "국어",
+  수학: "수학",
+  사회: "사회 (역사 포함)",
+  과학: "과학",
+  영어: "영어",
+  체육: "체육",
+  예술: "예술 (음악·미술)",
+  "기술·가정": "기술·가정",
   정보: "정보",
   기타: "기타 (직접 입력)",
 };

@@ -23,7 +23,8 @@ export async function runDesign(rawBody: unknown): Promise<DesignHandlerResult> 
   const allowedSubjects = resolveAllowedSubjectsWithCurriculum(
     body.selectedSubject,
     body.major,
-    body.keywords
+    body.keywords,
+    body.courseName
   );
 
   try {

@@ -23,7 +23,8 @@ export async function runQuestions(rawBody: unknown): Promise<QuestionsHandlerRe
   const allowedSubjects = resolveAllowedSubjectsWithCurriculum(
     body.selectedSubject,
     body.major,
-    body.keywords
+    body.keywords,
+    body.courseName
   );
 
   try {

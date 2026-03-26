@@ -5,6 +5,7 @@ import {
   FEW_SHOT_DESIGN_ASSISTANT,
 } from "../prompts/system.js";
 import type { ExplorationBody } from "../schemas/input.js";
+import { isMiddleSchoolGrade } from "./middleCurriculum.js";
 import { buildExplorationDesignJsonSchema } from "../schemas/designJsonSchema.js";
 import { buildQuestionsResponseJsonSchema } from "../schemas/questionsJsonSchema.js";
 import {
@@ -34,14 +35,22 @@ function buildExplorationContext(
   const curriculumLine =
     body.selectedSubject === "기타"
       ? `세부 교과·과목(직접 입력): ${body.courseName?.trim() ?? ""}`
-      : [
-          "2022 개정 교육과정 과목 선택:",
-          `교과(군): ${body.selectedSubject}`,
-          body.courseCategory ? `선택 유형: ${body.courseCategory}` : "",
-          body.courseName?.trim() ? `과목명: ${body.courseName.trim()}` : "",
-        ]
-          .filter(Boolean)
-          .join(" | ");
+      : isMiddleSchoolGrade(body.grade)
+        ? [
+            "2022 개정 중학교 과정:",
+            `교과(군): ${body.selectedSubject}`,
+            body.courseName?.trim() ? `과목명: ${body.courseName.trim()}` : "",
+          ]
+            .filter(Boolean)
+            .join(" | ")
+        : [
+            "2022 개정 고등학교 과목 선택:",
+            `교과(군): ${body.selectedSubject}`,
+            body.courseCategory ? `선택 유형: ${body.courseCategory}` : "",
+            body.courseName?.trim() ? `과목명: ${body.courseName.trim()}` : "",
+          ]
+            .filter(Boolean)
+            .join(" | ");
 
   const gradeDepthByYear: Record<(typeof body)["grade"], string> = {
     중1: "학년: 중1—관찰·짧은 보고 중심, 최저 난이도.",
@@ -58,6 +67,8 @@ function buildExplorationContext(
     curriculumLine,
     `희망 전공: ${body.major}`,
     `관심 키워드: ${body.keywords.join(", ")}`,
+    body.interestTopicDetail?.trim() &&
+      `관심 주제 상세(선택): ${body.interestTopicDetail.trim()}`,
     `학년: ${body.grade}`,
     gradeDepthByYear[body.grade],
     `탐구 유형: ${body.inquiryType}`,

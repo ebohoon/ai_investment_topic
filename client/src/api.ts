@@ -11,6 +11,8 @@ export type RecommendPayload = {
   constraintTeam?: string;
   constraintBudget?: string;
   constraintsExtra?: string;
+  /** 관심 주제 상세(선택, 키워드 보충) */
+  interestTopicDetail?: string;
 };
 
 /** POST /api/recommend/questions · /api/recommend/design 공통 본문 */
@@ -83,6 +85,7 @@ function explorationJsonBody(body: ExplorationPayload) {
     constraintTeam: body.constraintTeam || undefined,
     constraintBudget: body.constraintBudget || undefined,
     constraintsExtra: body.constraintsExtra?.trim() || undefined,
+    interestTopicDetail: body.interestTopicDetail?.trim() || undefined,
     selectedSubject: body.selectedSubject,
     courseCategory: body.courseCategory?.trim() || undefined,
     courseName: body.courseName?.trim() || undefined,
@@ -114,6 +117,7 @@ export async function fetchRecommendations(
         constraintTeam: body.constraintTeam || undefined,
         constraintBudget: body.constraintBudget || undefined,
         constraintsExtra: body.constraintsExtra?.trim() || undefined,
+        interestTopicDetail: body.interestTopicDetail?.trim() || undefined,
       }),
     });
   } catch {

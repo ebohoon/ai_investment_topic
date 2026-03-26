@@ -53,6 +53,9 @@ function buildUserContent(body: RecommendBody, allowedSubjects: string[]): strin
     "학생 프로필:",
     `희망 전공: ${body.major}`,
     `관심 키워드(3): ${body.keywords.join(", ")}`,
+    body.interestTopicDetail?.trim()
+      ? `관심 주제 상세(선택): ${body.interestTopicDetail.trim()}`
+      : null,
     `학년: ${body.grade}`,
     gradeDepth,
     opt || "추가 선택 정보: 없음",

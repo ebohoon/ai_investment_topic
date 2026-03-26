@@ -1,12 +1,23 @@
 /** 서버 input.ts 규칙과 동일하게 유지 (제출 전 안내용) */
 
-import { COURSE_CATEGORY_OPTIONS, SUBJECT_GROUP_KEYS } from "./curriculumData";
+import {
+  COURSE_CATEGORY_OPTIONS,
+  isMiddleSchoolGrade,
+  isValidMiddleSchoolCourse,
+  MIDDLE_SUBJECT_GROUP_KEYS,
+  SUBJECT_GROUP_KEYS,
+} from "./curriculumData";
 
 function isOnlyRepeatedChar(s: string): boolean {
   return s.length >= 2 && /^(.)\1+$/.test(s);
 }
 
+/** 고등학교 STEP1 교과(군) 목록 — 탐구 전체 검증은 `subjectsForExplorationGrade` 사용 */
 export const CURRICULUM_SUBJECTS = SUBJECT_GROUP_KEYS;
+
+export function subjectsForExplorationGrade(grade: string): readonly string[] {
+  return isMiddleSchoolGrade(grade) ? MIDDLE_SUBJECT_GROUP_KEYS : SUBJECT_GROUP_KEYS;
+}
 
 export { COURSE_CATEGORY_OPTIONS };
 
@@ -94,6 +105,8 @@ export type RecommendFormInput = {
   gradeLevel: string;
   performanceExperience: string;
   constraintsExtra: string;
+  /** STEP 2 선택 — 키워드보다 긴 관심 주제 설명 */
+  interestTopicDetail: string;
 };
 
 /** 오류 메시지 또는 null(통과) */
@@ -130,10 +143,10 @@ export function validateRecommendForm(input: RecommendFormInput): string | null 
   }
 
   const perf = input.performanceExperience.trim();
-  if (perf.length < 5) {
-    return "수행·탐구 경험을 5글자 이상 입력해 주세요.";
+  if (perf.length > 0 && perf.length < 5) {
+    return "수행·탐구 경험은 비워 두거나, 5글자 이상 구체적으로 입력해 주세요.";
   }
-  if (isOnlyRepeatedChar(perf)) {
+  if (perf.length >= 2 && isOnlyRepeatedChar(perf)) {
     return "수행·탐구 경험에 의미 없는 반복 입력은 사용할 수 없습니다.";
   }
 
@@ -143,6 +156,14 @@ export function validateRecommendForm(input: RecommendFormInput): string | null 
   }
   if (extra.length >= 2 && isOnlyRepeatedChar(extra)) {
     return "기타 조건에 의미 없는 반복 입력은 사용할 수 없습니다.";
+  }
+
+  const topicDetail = input.interestTopicDetail.trim();
+  if (topicDetail.length > 0 && topicDetail.length < 5) {
+    return "관심 주제 상세는 비워 두거나, 5글자 이상 구체적으로 입력해 주세요.";
+  }
+  if (topicDetail.length >= 2 && isOnlyRepeatedChar(topicDetail)) {
+    return "관심 주제 상세에 의미 없는 반복 입력은 사용할 수 없습니다.";
   }
 
   return null;
@@ -179,6 +200,7 @@ function validateExplorationConditionFields(input: {
 }
 
 export type ExplorationFormInput = RecommendFormInput & {
+  grade: string;
   selectedSubject: string;
   courseCategory: string;
   courseName: string;
@@ -203,8 +225,15 @@ export function validateExplorationForm(input: ExplorationFormInput): string | n
   if (!input.selectedSubject.trim()) {
     return "교과를 선택하세요.";
   }
-  if (!CURRICULUM_SUBJECTS.includes(input.selectedSubject as (typeof CURRICULUM_SUBJECTS)[number])) {
+  const allowedSubjects = subjectsForExplorationGrade(input.grade);
+  if (!allowedSubjects.includes(input.selectedSubject)) {
     return "교과를 목록에서 선택하세요.";
+  }
+
+  if (!isMiddleSchoolGrade(input.grade)) {
+    if (["체육", "예술", "기술·가정"].includes(input.selectedSubject)) {
+      return "체육·예술·기술·가정은 중학교 학년에서만 선택할 수 있습니다.";
+    }
   }
 
   if (input.selectedSubject === "기타") {
@@ -214,6 +243,17 @@ export function validateExplorationForm(input: ExplorationFormInput): string | n
     }
     if (isOnlyRepeatedChar(n)) {
       return "세부 교과명에 의미 없는 반복 입력은 사용할 수 없습니다.";
+    }
+  } else if (isMiddleSchoolGrade(input.grade)) {
+    const cn = input.courseName.trim();
+    if (!cn) {
+      return "교과 과목명을 선택하세요.";
+    }
+    if (isOnlyRepeatedChar(cn)) {
+      return "과목명에 의미 없는 반복 입력은 사용할 수 없습니다.";
+    }
+    if (!isValidMiddleSchoolCourse(input.selectedSubject, cn)) {
+      return "선택한 교과(군)에 맞는 과목명을 고르세요.";
     }
   } else {
     if (!input.courseCategory.trim()) {
@@ -269,15 +309,38 @@ export function validateExplorationStep1(input: {
   major: string;
   grade: string;
 }): string | null {
+  const major = input.major.trim();
+  if (major.length < 2) return "희망 전공은 2글자 이상 구체적으로 입력해 주세요.";
+  if (isOnlyRepeatedChar(major)) {
+    return "희망 전공에 의미 없는 반복 입력은 사용할 수 없습니다.";
+  }
+  if (!input.grade.trim()) return "학년을 선택하세요.";
+
   if (!input.selectedSubject.trim()) return "교과를 선택하세요.";
-  if (!CURRICULUM_SUBJECTS.includes(input.selectedSubject as (typeof CURRICULUM_SUBJECTS)[number])) {
+  const allowedSubjects = subjectsForExplorationGrade(input.grade);
+  if (!allowedSubjects.includes(input.selectedSubject)) {
     return "교과를 목록에서 선택하세요.";
   }
+  if (!isMiddleSchoolGrade(input.grade)) {
+    if (["체육", "예술", "기술·가정"].includes(input.selectedSubject)) {
+      return "체육·예술·기술·가정은 중학교 학년에서만 선택할 수 있습니다.";
+    }
+  }
+
   if (input.selectedSubject === "기타") {
     const n = input.courseName.trim();
     if (n.length < 2) return "기타 선택 시 세부 교과·과목명을 2글자 이상 입력해 주세요.";
     if (isOnlyRepeatedChar(n)) {
       return "세부 교과명에 의미 없는 반복 입력은 사용할 수 없습니다.";
+    }
+  } else if (isMiddleSchoolGrade(input.grade)) {
+    const cn = input.courseName.trim();
+    if (!cn) return "교과 과목명을 선택하세요.";
+    if (isOnlyRepeatedChar(cn)) {
+      return "과목명에 의미 없는 반복 입력은 사용할 수 없습니다.";
+    }
+    if (!isValidMiddleSchoolCourse(input.selectedSubject, cn)) {
+      return "선택한 교과(군)에 맞는 과목명을 고르세요.";
     }
   } else {
     if (!input.courseCategory.trim()) return "과목 분류를 선택하세요.";
@@ -289,12 +352,6 @@ export function validateExplorationStep1(input: {
       return "과목명에 의미 없는 반복 입력은 사용할 수 없습니다.";
     }
   }
-  const major = input.major.trim();
-  if (major.length < 2) return "희망 전공은 2글자 이상 구체적으로 입력해 주세요.";
-  if (isOnlyRepeatedChar(major)) {
-    return "희망 전공에 의미 없는 반복 입력은 사용할 수 없습니다.";
-  }
-  if (!input.grade.trim()) return "학년을 선택하세요.";
   return null;
 }
 
