@@ -222,6 +222,10 @@ export function validateExplorationForm(input: ExplorationFormInput): string | n
   const cond = validateExplorationConditionFields(input);
   if (cond) return cond;
 
+  if (!input.grade.trim()) {
+    return "학년을 선택하세요.";
+  }
+
   if (!input.selectedSubject.trim()) {
     return "교과를 선택하세요.";
   }

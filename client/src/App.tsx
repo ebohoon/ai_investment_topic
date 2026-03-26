@@ -362,7 +362,7 @@ export default function App() {
   const [courseCategory, setCourseCategory] = useState("");
   const [courseName, setCourseName] = useState("");
   const [major, setMajor] = useState("");
-  const [grade, setGrade] = useState("고1");
+  const [grade, setGrade] = useState("");
 
   const [k1, setK1] = useState("");
   const [k2, setK2] = useState("");
@@ -417,10 +417,13 @@ export default function App() {
 
   const isMiddleGrade = useMemo(() => isMiddleSchoolGrade(grade), [grade]);
 
-  const subjectKeysForGrade = isMiddleGrade ? MIDDLE_SUBJECT_GROUP_KEYS : SUBJECT_GROUP_KEYS;
+  const subjectKeysForGrade = useMemo(() => {
+    if (!grade.trim()) return [] as readonly string[];
+    return isMiddleSchoolGrade(grade) ? MIDDLE_SUBJECT_GROUP_KEYS : SUBJECT_GROUP_KEYS;
+  }, [grade]);
 
   const courseNameOptions = useMemo(() => {
-    if (!selectedSubject || selectedSubject === "기타") return [];
+    if (!grade.trim() || !selectedSubject || selectedSubject === "기타") return [];
     if (isMiddleGrade) {
       return getMiddleSchoolCourseNames(
         selectedSubject as Exclude<MiddleSubjectGroupKey, "기타">
@@ -431,7 +434,7 @@ export default function App() {
       selectedSubject as Exclude<SubjectGroupKey, "기타">,
       courseCategory as CourseCategory
     );
-  }, [selectedSubject, courseCategory, isMiddleGrade]);
+  }, [grade, selectedSubject, courseCategory, isMiddleGrade]);
 
   const explorationPayload = useCallback((): ExplorationPayload => {
     return {
@@ -821,13 +824,14 @@ export default function App() {
                       const wasMiddle = isMiddleSchoolGrade(grade);
                       const nowMiddle = isMiddleSchoolGrade(g);
                       setGrade(g);
-                      if (wasMiddle !== nowMiddle) {
+                      if (!g || wasMiddle !== nowMiddle) {
                         setSelectedSubject("");
                         setCourseCategory("");
                         setCourseName("");
                       }
                     }}
                   >
+                    <option value="">선택</option>
                     {SCHOOL_GRADES.map((g) => (
                       <option key={g} value={g}>
                         {g}
@@ -861,13 +865,16 @@ export default function App() {
                     id="subject"
                     className="text-like input-base"
                     value={selectedSubject}
+                    disabled={!grade.trim()}
                     onChange={(e) => {
                       setSelectedSubject(e.target.value);
                       setCourseCategory("");
                       setCourseName("");
                     }}
                   >
-                    <option value="">교과(군)을 선택하세요</option>
+                    <option value="">
+                      {grade.trim() ? "교과(군)을 선택하세요" : "먼저 학년을 선택하세요"}
+                    </option>
                     {subjectKeysForGrade.map((s) => (
                       <option key={s} value={s}>
                         {isMiddleGrade
@@ -877,9 +884,11 @@ export default function App() {
                     ))}
                   </select>
                   <span className="field-hint">
-                    {isMiddleGrade
-                      ? "중학교 과정: 교과(군)별로 정해진 과목명 중에서 선택합니다."
-                      : "고등학교: 국·수·영·사·과·정보·기타. 기타는 예체능·융합 등 직접 입력합니다."}
+                    {!grade.trim()
+                      ? "학년을 선택하면 중학교·고등학교에 맞는 교과(군) 목록이 표시됩니다."
+                      : isMiddleGrade
+                        ? "중학교 과정: 교과(군)별로 정해진 과목명 중에서 선택합니다."
+                        : "고등학교: 국·수·영·사·과·정보·기타. 기타는 예체능·융합 등 직접 입력합니다."}
                   </span>
                 </div>
 
