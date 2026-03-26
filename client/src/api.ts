@@ -47,6 +47,8 @@ export type ExplorationDesign = {
   researchQuestion: string;
   overview: string;
   methodSteps: string[];
+  /** 대상·자료·분석을 구체화한 탐구 예시(주차 일정식 서술 아님) */
+  explorationExample: string;
   expectedResults: string;
   extensionDirections: string;
   subjects: string[];

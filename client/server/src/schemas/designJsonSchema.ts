@@ -20,6 +20,12 @@ export function buildExplorationDesignJsonSchema(allowedSubjects: string[]) {
         maxItems: 12,
         items: { type: "string", minLength: 3 },
       },
+      explorationExample: {
+        type: "string",
+        minLength: 40,
+        maxLength: 2000,
+        description: "반드시 맨 앞이 '예:'로 시작(앞 공백 없음).",
+      },
       expectedResults: { type: "string", minLength: 20, maxLength: 2000 },
       extensionDirections: { type: "string", minLength: 15, maxLength: 1500 },
       subjects: {
@@ -45,6 +51,7 @@ export function buildExplorationDesignJsonSchema(allowedSubjects: string[]) {
       "researchQuestion",
       "overview",
       "methodSteps",
+      "explorationExample",
       "expectedResults",
       "extensionDirections",
       "subjects",

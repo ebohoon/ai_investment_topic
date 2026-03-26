@@ -673,6 +673,38 @@
   margin-top: -0.15rem;
 }
 
+/* 관심 주제 상세보다 한 단계 낮은 참고 블록 */
+.step1-curriculum-recap-wrap {
+  margin: 0 0 0.55rem;
+  padding: 0.45rem 0 0.35rem 0.75rem;
+  border-left: 2px solid rgba(100, 130, 180, 0.35);
+}
+
+.step1-curriculum-recap__kicker {
+  margin: 0 0 0.3rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.step1-curriculum-recap {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.step1-curriculum-recap__lead {
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.88;
+}
+
+.step1-curriculum-recap__body {
+  color: var(--text-muted);
+}
+
 .input-base,
 select.text-like,
 textarea.input-base {

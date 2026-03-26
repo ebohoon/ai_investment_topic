@@ -32,6 +32,16 @@ export const explorationDesignSchema = z.object({
   researchQuestion: z.string().min(8).max(400),
   overview: z.string().min(30).max(2500),
   methodSteps: z.array(z.string().min(3)).min(4).max(12),
+  /** 대상·자료·분석을 구체화한 탐구 예시(항상 '예:' 접두, 주차 일정 나열 금지) */
+  explorationExample: z
+    .string()
+    .max(2000)
+    .transform((s) => {
+      const t = s.trim();
+      if (t.startsWith("예:")) return t;
+      return `예: ${t}`;
+    })
+    .pipe(z.string().min(40).max(2000)),
   expectedResults: z.string().min(20).max(2000),
   extensionDirections: z.string().min(15).max(1500),
   subjects: z.array(z.string().min(1)).min(2).max(5),

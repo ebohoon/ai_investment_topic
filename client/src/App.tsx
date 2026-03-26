@@ -160,6 +160,9 @@ function formatDesignBlock(d: ExplorationDesign): string {
     "【탐구 방법】",
     ...d.methodSteps.map((m, i) => `${i + 1}. ${m}`),
     "",
+    "【탐구 예시】",
+    d.explorationExample,
+    "",
     "【기대 결과】",
     d.expectedResults,
     "",
@@ -238,6 +241,11 @@ function DesignResultCard({
             <li key={i}>{m}</li>
           ))}
         </ul>
+      </div>
+
+      <div className="section">
+        <h3>탐구 예시</h3>
+        <p className="text-block">{design.explorationExample}</p>
       </div>
 
       <div className="section">
@@ -435,6 +443,36 @@ export default function App() {
       courseCategory as CourseCategory
     );
   }, [grade, selectedSubject, courseCategory, isMiddleGrade]);
+
+  /** STEP 2 관심 주제 상세 위 STEP 1 과목 요약 — 본문은 하이픈 구분 단계 */
+  const step1CurriculumRecap = useMemo((): { lead: string; body: string } => {
+    const g = grade.trim();
+    if (!g) return { lead: "선택한 과목:", body: "(학년·교과 미선택)" };
+    const parts: string[] = [g];
+    if (!selectedSubject.trim()) {
+      return { lead: "선택한 과목:", body: `${parts.join(" - ")} - 교과(군) 미선택` };
+    }
+    if (selectedSubject === "기타") {
+      const t = courseName.trim();
+      parts.push("기타");
+      if (t) parts.push(t);
+      return { lead: "선택한 과목:", body: parts.join(" - ") };
+    }
+    const subjLabel = isMiddleGrade
+      ? MIDDLE_SUBJECT_GROUP_LABELS[selectedSubject as MiddleSubjectGroupKey]
+      : SUBJECT_GROUP_LABELS[selectedSubject as SubjectGroupKey];
+    parts.push(subjLabel);
+    if (isMiddleGrade) {
+      const cn = courseName.trim();
+      if (cn) parts.push(cn);
+      return { lead: "선택한 과목:", body: parts.join(" - ") };
+    }
+    const cat = courseCategory.trim();
+    const cn = courseName.trim();
+    if (cat) parts.push(cat);
+    if (cn) parts.push(cn);
+    return { lead: "선택한 과목:", body: parts.join(" - ") };
+  }, [grade, selectedSubject, courseCategory, courseName, isMiddleGrade]);
 
   const explorationPayload = useCallback((): ExplorationPayload => {
     return {
@@ -805,7 +843,7 @@ export default function App() {
                 <div>
                   <h2 id="sec-s1">STEP 1 — 교과·기본 정보</h2>
                   <p className="section-desc">
-                    먼저 현재 학년과 희망 전공을 고른 뒤, 학년에 맞는 교과(군)와 과목을 선택합니다.
+                    먼저 현재 학년과 희망 전공을 고른 뒤, 설계받고 싶은 교과(군)와 과목을 선택합니다.
                   </p>
                 </div>
               </div>
@@ -1057,9 +1095,20 @@ export default function App() {
                       관심 주제 상세
                       <span className="badge-opt">선택</span>
                     </label>
-                    <span className="field-hint" style={{ marginTop: 0 }}>
-                      키워드만으로 부족하면, 구체적으로 관심 분야·궁금한 점·하고 싶은 탐구 방향을 적어 주세요.
+                    <span className="field-hint" style={{ marginTop: 0, marginBottom: "0.45rem" }}>
+                      구체적으로 관심 분야·궁금한 점·하고 싶은 탐구 방향을 적어 주세요. 만약 탐구하고 싶은 교과연계
+                      아이디어가 있다면 서술해 주세요.
                     </span>
+                    <div className="step1-curriculum-recap-wrap">
+                      <p className="step1-curriculum-recap__kicker">STEP 1 참고</p>
+                      <p
+                        className="step1-curriculum-recap"
+                        aria-label={`${step1CurriculumRecap.lead} ${step1CurriculumRecap.body}`}
+                      >
+                        <strong className="step1-curriculum-recap__lead">{step1CurriculumRecap.lead}</strong>{" "}
+                        <span className="step1-curriculum-recap__body">{step1CurriculumRecap.body}</span>
+                      </p>
+                    </div>
                     <textarea
                       id="interestTopicDetail"
                       className="input-base"
@@ -1369,18 +1418,17 @@ export default function App() {
                 <div>
                   <h2 id="sec-s4">STEP 4 — 탐구 질문 생성·선택</h2>
                   <p className="section-desc">
-                    후보 질문을 만든 뒤, 원하는 만큼 고르면 질문마다 각각 다른 탐구 활동 설계가 만들어집니다. 예를 들어 5개를 고르면 설계 카드가 5개 나옵니다.
+                    후보 질문을 만든 뒤, 원하는 만큼 고르면 질문마다 각각 다른 탐구 활동 설계가 만들어집니다.
                   </p>
                 </div>
               </div>
-              <p className="step4-pick-hint" role="note">
-                질문은 1개 이상, 최대 {MAX_EXPLORATION_QUESTION_PICKS}개까지 선택할 수 있습니다. 카드를 눌러 넣었다 뺄 수 있습니다.
-              </p>
-              <div className="step4-actions">
-                <button type="button" className="btn-cta btn-cta--secondary" onClick={onGenerateQuestions} disabled={questionsLoading}>
-                  {questionsLoading ? "질문 생성 중…" : "탐구 질문 3~5개 생성"}
-                </button>
-              </div>
+              {(!questions || questions.length === 0) && (
+                <div className="step4-actions">
+                  <button type="button" className="btn-cta btn-cta--secondary" onClick={onGenerateQuestions} disabled={questionsLoading}>
+                    {questionsLoading ? "질문 생성 중…" : "탐구 질문 3~5개 생성"}
+                  </button>
+                </div>
+              )}
               {questions && questions.length > 0 && (
                 <>
                   <p className="step4-pick-count" aria-live="polite">
