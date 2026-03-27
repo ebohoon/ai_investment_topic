@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { runDesign } from "../server/src/handlers/designHandler.js";
 
+// Vercel Pro: 최대 300s (vercel.json·아래 config와 맞출 것)
 export const config = {
-  /** Pro: 최대 300s. 탐구 설계(대형 JSON) + OpenAI 지연 시 120s를 넘길 수 있음 */
   maxDuration: 300,
 };
 
