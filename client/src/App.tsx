@@ -269,7 +269,7 @@ function formatInitialAnalysisStepForCopy(
   const outLabel = processKind === "data_ai" ? "산출·수치" : "산출·근거";
   return [
     `${i + 1}. ${s.phase}`,
-    `   절차(완료형): ${s.procedure}`,
+    `   절차: ${s.procedure}`,
     `   ${outLabel}: ${s.concreteOutput}`,
     `   한계·주의: ${s.caveat}`,
   ].join("\n");
@@ -452,7 +452,7 @@ function DesignResultCard({
             <li key={i} className="design-analysis-example-step">
               <span className="design-analysis-example-phase">{step.phase}</span>
               <dl className="design-analysis-example-dl">
-                <dt>절차(완료형)</dt>
+                <dt>절차</dt>
                 <dd>{step.procedure}</dd>
                 <dt>
                   {design.initialAnalysisProcessKind === "data_ai" ? "산출·수치" : "산출·근거"}

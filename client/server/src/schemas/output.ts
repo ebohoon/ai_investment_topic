@@ -120,9 +120,9 @@ export const initialAnalysisPhaseSchema = z.enum([
 
 export const initialAnalysisStepSchema = z.object({
   phase: initialAnalysisPhaseSchema,
-  /** 주제에 맞는 가상 예시(과거·완료형). 학생이 따라가기 쉽게 구체적으로 */
+  /** 주제에 맞는 가상 예시. 학생이 따라가기 쉽게 구체적으로 */
   procedure: z.string().min(35).max(800),
-  /** 산출: 수치·표·논지·인용 등 관측·검증 가능한 결과 서술 */
+  /** 산출: 수치·표·논지·인용 등 */
   concreteOutput: z.string().min(35).max(800),
   /** 표본·인과·일반화·과적합 등 한계·주의 */
   caveat: z.string().min(12).max(400),

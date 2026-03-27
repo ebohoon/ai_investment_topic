@@ -159,8 +159,8 @@ export function buildExplorationDesignJsonSchema(
 
   const initialAnalysisExamplesDescription =
     processKind === "data_ai"
-      ? "[7] 탐구 과정 단계별 실행 예시 — AI 업무 적용 프로세스 5단계. 순서 고정. ‘데이터 수집’ 단계는 설문·관찰과 공공데이터 등을 한 흐름으로 엮어 예시. [5]와 억지로 맞추지 않음."
-      : "[7] 탐구 과정 단계별 실행 예시 — 과정중심 탐구 5단계. 순서 고정. ‘자료·근거 수집’ 단계는 직접 자료와 공공·기관 자료를 자연스럽게 함께 드러낼 것. 수치·AI 모델을 억지로 넣지 말 것.";
+      ? "[7] 탐구 과정 단계별 실행 예시 — AI 업무 적용 프로세스 5단계. 순서 고정. procedure·concreteOutput·caveat는 현재형. ‘데이터 수집’ 단계는 설문·관찰과 공공데이터 등을 한 흐름으로 엮어 예시. [5]와 억지로 맞추지 않음."
+      : "[7] 탐구 과정 단계별 실행 예시 — 과정중심 탐구 5단계. 순서 고정. procedure·concreteOutput·caveat는 현재형. ‘자료·근거 수집’ 단계는 직접 자료와 공공·기관 자료를 자연스럽게 함께 드러낼 것. 수치·AI 모델을 억지로 넣지 말 것.";
 
   return {
     type: "object",
@@ -236,7 +236,7 @@ export function buildExplorationDesignJsonSchema(
               minLength: 35,
               maxLength: 800,
               description:
-                "해당 단계에서 한 일(완료형). 학생 수준·탐구 맥락에 맞게 구체적으로.",
+                "해당 단계에서 하는 일·상황. 학생 수준·탐구 맥락에 맞게 구체적으로.",
             },
             concreteOutput: {
               type: "string",
