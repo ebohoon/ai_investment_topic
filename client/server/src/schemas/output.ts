@@ -3,6 +3,7 @@ import {
   DATA_AI_PHASE_ORDER,
   GENERAL_PHASE_ORDER,
 } from "../lib/initialAnalysisProfile.js";
+import { urlOutputPolicyViolation } from "../lib/urlPolicy.js";
 
 export const topicItemSchema = z.object({
   title: z.string().min(5),
@@ -32,20 +33,42 @@ export const questionsResponseSchema = z.object({
 export type QuestionsResponse = z.infer<typeof questionsResponseSchema>;
 
 /** 추천 참고 자료 1건 — URL은 검증 가능한 실제 링크만 (가짜 링크 금지) */
-export const recommendedSourceSchema = z.object({
-  title: z.string().min(2).max(200),
-  url: z.string().url().max(2000),
-  sourceType: z.enum(["youtube", "paper_pdf", "institution", "news"]),
-  /** 해당 주제에 어떤 점에서 도움이 되는지 논리적으로 한 덩어리로 서술 */
-  howItHelps: z.string().min(80).max(1500),
-});
+export const recommendedSourceSchema = z
+  .object({
+    title: z.string().min(2).max(200),
+    url: z.string().url().max(2000),
+    sourceType: z.enum(["youtube", "paper_pdf", "institution", "news"]),
+    /** 해당 주제에 어떤 점에서 도움이 되는지 논리적으로 한 덩어리로 서술 */
+    howItHelps: z.string().min(80).max(1500),
+  })
+  .superRefine((val, ctx) => {
+    const err = urlOutputPolicyViolation(val.url);
+    if (err) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${err} 공식 https·루트 URL을 사용하세요.`,
+        path: ["url"],
+      });
+    }
+  });
 
 /** [12] 관련 검색 1건 — 제목에 [보고서]·[PDF] 등 유형 태그, 실제 URL */
-export const relatedSearchItemSchema = z.object({
-  title: z.string().min(8).max(220),
-  url: z.string().url().max(2000),
-  summary: z.string().min(15).max(500),
-});
+export const relatedSearchItemSchema = z
+  .object({
+    title: z.string().min(8).max(220),
+    url: z.string().url().max(2000),
+    summary: z.string().min(15).max(500),
+  })
+  .superRefine((val, ctx) => {
+    const err = urlOutputPolicyViolation(val.url);
+    if (err) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `${err} 공식 https·루트 URL을 사용하세요.`,
+        path: ["url"],
+      });
+    }
+  });
 
 /** [5] 탐구 방법 — 수집·분석·도구·시각화 */
 export const researchExecutionSchema = z.object({
@@ -78,7 +101,7 @@ export const comparisonTableSchema = z
     });
   });
 
-/** [7] phase — data_ai 5단계 + general 5단계(문자열 겹침 없음) */
+/** [7] 탐구 과정 단계별 실행 예시 — phase: data_ai 5단계 + general 5단계(문자열 겹침 없음) */
 export const initialAnalysisPhaseSchema = z.enum([
   "문제 정의",
   "데이터 수집",
@@ -130,7 +153,7 @@ export const explorationDesignSchema = z
     comparisonTable: comparisonTableSchema,
     /** [7] 프로필: data_ai(데이터·AI) vs general(과정중심·비수치 가능) */
     initialAnalysisProcessKind: z.enum(["data_ai", "general"]),
-    /** [7] 초기 분석 예시 — 프로필에 따른 5단계 */
+    /** [7] 탐구 과정 단계별 실행 예시 — 프로필에 따른 5단계 */
     initialAnalysisExamples: initialAnalysisExamplesSchema,
     /** [8] 기대 결과 — 짧은 항목 3~6개(일목요연) */
     expectedResults: z.array(z.string().min(10).max(240)).min(3).max(6),

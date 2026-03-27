@@ -559,6 +559,13 @@
   color: var(--text);
 }
 
+.design-link-disclaimer {
+  margin: 0 0 0.75rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
 .design-source-list {
   list-style: none;
   margin: 0;

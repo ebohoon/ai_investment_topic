@@ -65,7 +65,7 @@ export type ComparisonTable = {
   rows: ComparisonTableRow[];
 };
 
-/** [7] 초기 분석 예시 — 탐구 유형에 따라 phase 집합이 다름(순서 고정) */
+/** [7] 탐구 과정 단계별 실행 예시 — 탐구 유형에 따라 phase 집합이 다름(순서 고정) */
 export type InitialAnalysisProcessKind = "data_ai" | "general";
 
 export type InitialAnalysisStep = {
@@ -102,7 +102,7 @@ export type ExplorationDesign = {
   comparisonStructure: string;
   /** 비교·대조표 초안(열·행 배열; UI는 HTML 테이블로 렌더) */
   comparisonTable: ComparisonTable;
-  /** 데이터·AI 탐구 vs 과정중심 탐구 — [5][7] 단계 체계 구분 */
+  /** 데이터·AI 탐구 vs 과정중심 탐구 — [7] 탐구 과정 단계별 실행 예시 프로필 */
   initialAnalysisProcessKind: InitialAnalysisProcessKind;
   initialAnalysisExamples: [
     InitialAnalysisStep,

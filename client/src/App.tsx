@@ -313,8 +313,8 @@ function formatDesignBlock(d: ExplorationDesign): string {
     formatComparisonTableForCopy(d.comparisonTable),
     "",
     d.initialAnalysisProcessKind === "data_ai"
-      ? "【7】 초기 분석 예시 (AI 업무 적용 프로세스 5단계)"
-      : "【7】 초기 분석 예시 (과정중심 탐구 5단계)",
+      ? "【7】 탐구 과정 단계별 실행 예시 (AI 업무 적용 프로세스 5단계)"
+      : "【7】 탐구 과정 단계별 실행 예시 (과정중심 탐구 5단계)",
     ...d.initialAnalysisExamples.map((s, i) =>
       formatInitialAnalysisStepForCopy(s, i, d.initialAnalysisProcessKind)
     ),
@@ -386,6 +386,9 @@ function DesignResultCard({
 
       <div className="section">
         <h3>[3] 추천 참고 자료</h3>
+        <p className="field-hint design-link-disclaimer">
+          ※ 아래 링크는 참고용이에요. 열리지 않으면 해당 기관·포털 공식 사이트에서 검색해 보세요.
+        </p>
         <ul className="design-source-list">
           {design.recommendedSources.map((s, i) => (
             <li key={i} className="design-source-item">
@@ -443,7 +446,7 @@ function DesignResultCard({
       </div>
 
       <div className="section">
-        <h3>[7] 초기 분석 예시</h3>
+        <h3>[7] 탐구 과정 단계별 실행 예시</h3>
         <ol className="design-analysis-example-list">
           {design.initialAnalysisExamples.map((step, i) => (
             <li key={i} className="design-analysis-example-step">
@@ -502,6 +505,9 @@ function DesignResultCard({
 
       <div className="section">
         <h3>[12] 관련 검색·참고 링크</h3>
+        <p className="field-hint design-link-disclaimer">
+          ※ 아래 링크는 참고용이에요. 열리지 않으면 해당 기관·포털 공식 사이트에서 검색해 보세요.
+        </p>
         <ol className="design-related-list">
           {design.relatedSearchItems.map((item, i) => (
             <RelatedSearchCard key={i} item={item} index={i} />

@@ -26,7 +26,7 @@ export function buildExplorationDesignJsonSchema(
         minLength: 12,
         maxLength: 2000,
         description:
-          "https 실제 URL. 나무위키·편집형 위키·익명 커뮤니티 단독 추천 금지(기관·논문·기사·교육영상 우선).",
+          "https만. 임의 경로·환각 URL 금지. 기관·포털은 공식 도메인 대표 URL 우선. 나무위키·DC 등 비권장 도메인 금지.",
       },
       sourceType: { type: "string", enum: [...SOURCE_TYPE_ENUM] },
       howItHelps: {
@@ -159,8 +159,8 @@ export function buildExplorationDesignJsonSchema(
 
   const initialAnalysisExamplesDescription =
     processKind === "data_ai"
-      ? "[7] AI 업무 적용 프로세스 5단계. 순서 고정. ‘데이터 수집’ 단계는 설문·관찰과 공공데이터 등을 한 흐름으로 엮어 예시. [5]와 억지로 맞추지 않음."
-      : "[7] 과정중심 탐구 5단계. 순서 고정. ‘자료·근거 수집’ 단계는 직접 자료와 공공·기관 자료를 자연스럽게 함께 드러낼 것. 수치·AI 모델을 억지로 넣지 말 것.";
+      ? "[7] 탐구 과정 단계별 실행 예시 — AI 업무 적용 프로세스 5단계. 순서 고정. ‘데이터 수집’ 단계는 설문·관찰과 공공데이터 등을 한 흐름으로 엮어 예시. [5]와 억지로 맞추지 않음."
+      : "[7] 탐구 과정 단계별 실행 예시 — 과정중심 탐구 5단계. 순서 고정. ‘자료·근거 수집’ 단계는 직접 자료와 공공·기관 자료를 자연스럽게 함께 드러낼 것. 수치·AI 모델을 억지로 넣지 말 것.";
 
   return {
     type: "object",
@@ -191,7 +191,8 @@ export function buildExplorationDesignJsonSchema(
         minItems: 3,
         maxItems: 5,
         items: recommendedSource,
-        description: "[3] 추천 참고 자료. 가짜 URL 금지.",
+        description:
+          "[3] 추천 참고 자료. 접속 가능한 공식 https만. 불확실하면 루트 URL+howItHelps로 안내.",
       },
       analysisFrames: {
         type: "array",
@@ -213,8 +214,8 @@ export function buildExplorationDesignJsonSchema(
         enum: [processKind],
         description:
           processKind === "data_ai"
-            ? "탐구 유형이 데이터 분석형·AI 활용 탐구형일 때. [7]은 AI 업무 적용 프로세스."
-            : "실험형·이론 탐구형·문제 해결형(PBL) 등일 때. [7]은 과정중심 5단계.",
+            ? "탐구 유형이 데이터 분석형·AI 활용 탐구형일 때. [7] 탐구 과정 단계별 실행 예시는 AI 업무 적용 프로세스."
+            : "실험형·이론 탐구형·문제 해결형(PBL) 등일 때. [7] 탐구 과정 단계별 실행 예시는 과정중심 5단계.",
       },
       initialAnalysisExamples: {
         type: "array",
@@ -302,7 +303,8 @@ export function buildExplorationDesignJsonSchema(
               type: "string",
               minLength: 12,
               maxLength: 2000,
-              description: "https 실제 접속 가능 URL. 나무위키 단독 금지.",
+              description:
+                "https만. 확실한 공식 링크. 임의 기사 경로 금지. 나무위키·DC 등 비권장 도메인 금지.",
             },
             summary: {
               type: "string",
@@ -314,7 +316,7 @@ export function buildExplorationDesignJsonSchema(
           required: ["title", "url", "summary"],
         },
         description:
-          "[12] 관련 자료 10건. 카드형(제목·URL·요약). 유형 태그와 실제 링크 필수.",
+          "[12] 관련 자료 10건. 카드형(제목·URL·요약). [3]과 동일 URL 규칙. 유형 태그와 실제 https 필수.",
       },
     },
     required: [
