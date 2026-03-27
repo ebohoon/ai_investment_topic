@@ -249,14 +249,20 @@ export async function fetchExplorationDesign(
       "서버에 연결할 수 없습니다. 로컬에서는 API 서버가 실행 중인지 확인해 주세요."
     );
   }
+  const rawText = await res.text();
   let data: {
     error?: string;
     designs?: ExplorationDesign[];
     allowedSubjects?: string[];
   };
   try {
-    data = (await res.json()) as typeof data;
+    data = rawText ? (JSON.parse(rawText) as typeof data) : {};
   } catch {
+    if (res.status === 504) {
+      throw new Error(
+        "서버 처리 시간이 초과되었습니다(504). 잠시 후 다시 시도하거나, 탐구 질문을 한 개만 선택해 보세요. 계속되면 Vercel 대시보드에서 해당 함수의 최대 실행 시간이 300초로 설정·재배포되었는지 확인해 주세요."
+      );
+    }
     throw new Error(`서버 응답을 해석할 수 없습니다 (${res.status})`);
   }
   if (!res.ok) {

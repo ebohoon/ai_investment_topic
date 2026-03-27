@@ -30,7 +30,7 @@
       "maxDuration": 60
     },
     "client/api/recommend-design.ts": {
-      "maxDuration": 120
+      "maxDuration": 300
     }
   }
 }
