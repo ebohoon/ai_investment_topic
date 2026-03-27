@@ -26,7 +26,7 @@ export function buildExplorationDesignJsonSchema(
         minLength: 12,
         maxLength: 2000,
         description:
-          "https만. 임의 경로·환각 URL 금지. 기관·포털은 공식 도메인 대표 URL 우선. 나무위키·DC 등 비권장 도메인 금지.",
+          "https만. youtube는 watch?v= 또는 youtu.be 동영상만; paper_pdf는 .pdf·arxiv·doi 등 문서 직접 링크만. institution·news는 공식 루트 가능. 나무위키·DC 금지.",
       },
       sourceType: { type: "string", enum: [...SOURCE_TYPE_ENUM] },
       howItHelps: {
@@ -304,7 +304,7 @@ export function buildExplorationDesignJsonSchema(
               minLength: 12,
               maxLength: 2000,
               description:
-                "https만. 확실한 공식 링크. 임의 기사 경로 금지. 나무위키·DC 등 비권장 도메인 금지.",
+                "https만. [YouTube]는 동영상 딥링크만, [PDF]는 문서 딥링크만; [기관]·[뉴스]는 공식 루트 가능. 나무위키·DC 금지.",
             },
             summary: {
               type: "string",

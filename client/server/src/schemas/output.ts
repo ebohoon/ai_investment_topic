@@ -3,7 +3,10 @@ import {
   DATA_AI_PHASE_ORDER,
   GENERAL_PHASE_ORDER,
 } from "../lib/initialAnalysisProfile.js";
-import { urlOutputPolicyViolation } from "../lib/urlPolicy.js";
+import {
+  urlOutputPolicyViolationForRecommendedSource,
+  urlOutputPolicyViolationForRelatedItem,
+} from "../lib/urlPolicy.js";
 
 export const topicItemSchema = z.object({
   title: z.string().min(5),
@@ -42,11 +45,11 @@ export const recommendedSourceSchema = z
     howItHelps: z.string().min(80).max(1500),
   })
   .superRefine((val, ctx) => {
-    const err = urlOutputPolicyViolation(val.url);
+    const err = urlOutputPolicyViolationForRecommendedSource(val.url, val.sourceType);
     if (err) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `${err} 공식 https·루트 URL을 사용하세요.`,
+        message: err,
         path: ["url"],
       });
     }
@@ -60,11 +63,11 @@ export const relatedSearchItemSchema = z
     summary: z.string().min(15).max(500),
   })
   .superRefine((val, ctx) => {
-    const err = urlOutputPolicyViolation(val.url);
+    const err = urlOutputPolicyViolationForRelatedItem(val.title, val.url);
     if (err) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `${err} 공식 https·루트 URL을 사용하세요.`,
+        message: err,
         path: ["url"],
       });
     }
