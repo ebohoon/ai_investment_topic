@@ -206,7 +206,7 @@ export function buildExplorationDesignJsonSchema(
         type: "string",
         minLength: 20,
         maxLength: 2000,
-        description: "[6] 비교 구조(서술: 무엇과 무엇을 어떤 기준으로 비교하는지).",
+        description: "[6] 비교 구조 분석(서술: 무엇과 무엇을 어떤 기준으로 비교하는지).",
       },
       comparisonTable,
       initialAnalysisProcessKind: {

@@ -150,7 +150,7 @@ export const explorationDesignSchema = z
     analysisFrames: z.array(z.string().min(1).max(200)).length(3),
     /** [5] 탐구 방법 — 수집·분석·도구·시각화 */
     researchExecution: researchExecutionSchema,
-    /** [6] 비교 구조(서술) */
+    /** [6] 비교 구조 분석(서술) */
     comparisonStructure: z.string().min(20).max(2000),
     /** [6] 보조: 비교·대조표 초안(구조화; ASCII·마크다운 문자열 금지) */
     comparisonTable: comparisonTableSchema,

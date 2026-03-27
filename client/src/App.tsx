@@ -306,7 +306,7 @@ function formatDesignBlock(d: ExplorationDesign): string {
     "· 도구: " + d.researchExecution.tools,
     "· 시각화: " + d.researchExecution.visualization,
     "",
-    "【6】 비교 구조",
+    "【6】 비교 구조 분석",
     d.comparisonStructure,
     "",
     "【6】 비교·대조표 초안",
@@ -439,7 +439,7 @@ function DesignResultCard({
       </div>
 
       <div className="section">
-        <h3>[6] 비교 구조</h3>
+        <h3>[6] 비교 구조 분석</h3>
         <p className="text-block">{design.comparisonStructure}</p>
         <p className="design-sub-label design-sub-label--spaced">비교·대조표 초안</p>
         <ComparisonTableView table={design.comparisonTable} />
