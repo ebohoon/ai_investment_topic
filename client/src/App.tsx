@@ -11,8 +11,12 @@ import "./App.css";
 import {
   fetchExplorationDesign,
   fetchResearchQuestions,
+  type ComparisonTable,
   type ExplorationDesign,
   type ExplorationPayload,
+  type InitialAnalysisStep,
+  type RecommendedSource,
+  type RelatedSearchItem,
 } from "./api";
 import {
   COURSE_CATEGORY_OPTIONS,
@@ -118,7 +122,6 @@ const STEP_LABELS = [
   "탐구 설계",
 ] as const;
 
-const MAX_EXPLORATION_QUESTION_PICKS = 5;
 
 function logEvent(name: string, detail?: Record<string, string>) {
   if (import.meta.env.DEV) {
@@ -126,64 +129,219 @@ function logEvent(name: string, detail?: Record<string, string>) {
   }
 }
 
-async function copyText(text: string): Promise<boolean> {
+function copyTextWithExecCommand(text: string): boolean {
   try {
-    await navigator.clipboard.writeText(text);
-    return true;
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.left = "-9999px";
+    ta.style.top = "0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand("copy");
+    document.body.removeChild(ta);
+    return ok;
   } catch {
+    return false;
+  }
+}
+
+const CLIPBOARD_WRITE_TIMEOUT_MS = 8000;
+
+/** 클립보드 복사(Clipboard API 우선, 실패·타임아웃 시 execCommand) */
+async function copyText(text: string): Promise<boolean> {
+  if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
     try {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.setAttribute("readonly", "");
-      ta.style.position = "fixed";
-      ta.style.left = "-9999px";
-      document.body.appendChild(ta);
-      ta.select();
-      const ok = document.execCommand("copy");
-      document.body.removeChild(ta);
-      return ok;
+      await Promise.race([
+        navigator.clipboard.writeText(text),
+        new Promise<never>((_, reject) => {
+          window.setTimeout(() => reject(new Error("clipboard timeout")), CLIPBOARD_WRITE_TIMEOUT_MS);
+        }),
+      ]);
+      return true;
     } catch {
-      return false;
+      // fall through
     }
   }
+  return copyTextWithExecCommand(text);
+}
+
+const SOURCE_TYPE_LABEL: Record<RecommendedSource["sourceType"], string> = {
+  youtube: "YouTube",
+  paper_pdf: "논문/PDF",
+  institution: "기관 자료",
+  news: "기사",
+};
+
+/** 복사용: 탭 구분(엑셀·메모장에 붙여넣기 용이) */
+function formatComparisonTableForCopy(t: ComparisonTable): string {
+  const headerLine = t.columnHeaders.join("\t");
+  const body = t.rows.map((r) => r.cells.join("\t")).join("\n");
+  return [headerLine, body].join("\n");
+}
+
+const COMPARISON_PLACEHOLDER_DISPLAY =
+  "※ 이 칸에는 비교 대상별로 측정·관찰·설문 결과를 한국어로 한 줄 이상 적습니다(가상 수치·임의 단정 금지).";
+
+/** 서버와 동일 규칙: ---·___만 있는 칸은 읽을 수 있는 안내로 치환(구 응답·캐시 대비) */
+function normalizeComparisonCellDisplay(cell: string): string {
+  const t = cell.trim();
+  if (t === "") return cell;
+  if (/^(?:___|…|\.{3,})$/.test(t)) return COMPARISON_PLACEHOLDER_DISPLAY;
+  if (/^[\-_]{2,}$/.test(t)) return COMPARISON_PLACEHOLDER_DISPLAY;
+  if (/^=+$/.test(t)) return COMPARISON_PLACEHOLDER_DISPLAY;
+  return cell;
+}
+
+function ComparisonTableView({ table }: { table: ComparisonTable }) {
+  if (!table.columnHeaders.length || !table.rows.length) return null;
+  return (
+    <div className="design-comparison-table-wrap design-comparison-table-wrap--md">
+      <table className="design-comparison-table-md">
+        <thead>
+          <tr>
+            {table.columnHeaders.map((h, i) => (
+              <th key={i}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {table.rows.map((row, ri) => (
+            <tr key={ri}>
+              {row.cells.map((c, ci) => (
+                <td key={ci}>{normalizeComparisonCellDisplay(c)}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function RelatedSearchCard({ item, index }: { item: RelatedSearchItem; index: number }) {
+  const n = index + 1;
+  return (
+    <li className="design-related-card">
+      <span className="design-related-card__num">{n}.</span>
+      <div className="design-related-card__body">
+        <a
+          className="design-related-card__link"
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {item.title}
+        </a>
+        <p className="design-related-card__summary">{item.summary}</p>
+      </div>
+    </li>
+  );
+}
+
+function subjectChipClassName(subject: string): string {
+  const key = subject.trim();
+  const map: Record<string, string> = {
+    국어: "chip-subject chip-subject--korean",
+    수학: "chip-subject chip-subject--math",
+    영어: "chip-subject chip-subject--english",
+    "사회(한국사/통합사회)": "chip-subject chip-subject--social",
+    "과학(통합과학/물화생지)": "chip-subject chip-subject--science",
+    정보: "chip-subject chip-subject--info",
+    미술: "chip-subject chip-subject--art",
+    음악: "chip-subject chip-subject--music",
+    체육: "chip-subject chip-subject--pe",
+    "기술·가정": "chip-subject chip-subject--home",
+  };
+  if (map[key]) return map[key];
+  let h = 0;
+  for (let i = 0; i < key.length; i++) h = (Math.imul(31, h) + key.charCodeAt(i)) | 0;
+  return `chip-subject chip-subject--alt${Math.abs(h) % 6}`;
+}
+
+function formatInitialAnalysisStepForCopy(
+  s: InitialAnalysisStep,
+  i: number,
+  processKind: ExplorationDesign["initialAnalysisProcessKind"]
+): string {
+  const outLabel = processKind === "data_ai" ? "산출·수치" : "산출·근거";
+  return [
+    `${i + 1}. ${s.phase}`,
+    `   절차(완료형): ${s.procedure}`,
+    `   ${outLabel}: ${s.concreteOutput}`,
+    `   한계·주의: ${s.caveat}`,
+  ].join("\n");
+}
+
+function formatRecommendedSourceBlock(s: RecommendedSource, i: number): string {
+  return [
+    `  [${i + 1}] ${s.title} (${SOURCE_TYPE_LABEL[s.sourceType]})`,
+    `  URL: ${s.url}`,
+    `  주제와의 연결: ${s.howItHelps}`,
+  ].join("\n");
 }
 
 function formatDesignBlock(d: ExplorationDesign): string {
   return [
-    `【탐구 주제】 ${d.title}`,
+    "【1】 탐구 한 줄 요약",
+    `"${d.oneLineSummary}"`,
     "",
-    `【탐구 질문】 ${d.researchQuestion}`,
+    "【1】 핵심 용어·탐구 범위",
+    d.keyTermsDefinition,
     "",
-    "【탐구 개요·목적】",
-    d.overview,
+    "【2】 핵심 탐구 질문",
+    ...d.coreResearchQuestions.map((q, i) => `${i + 1}. ${q}`),
     "",
-    "【탐구 방법】",
-    ...d.methodSteps.map((m, i) => `${i + 1}. ${m}`),
+    "【3】 추천 참고 자료",
+    ...d.recommendedSources.map((s, i) => formatRecommendedSourceBlock(s, i)),
     "",
-    "【탐구 예시】",
-    d.explorationExample,
+    "【4】 분석 프레임 (관점 3가지)",
+    ...d.analysisFrames.map((f, i) => `${i + 1}. ${f}`),
     "",
-    "【기대 결과】",
-    d.expectedResults,
+    "【5】 탐구 방법",
+    "· 데이터 수집: " + d.researchExecution.dataCollection,
+    "· 분석: " + d.researchExecution.analysisMethod,
+    "· 도구: " + d.researchExecution.tools,
+    "· 시각화: " + d.researchExecution.visualization,
     "",
-    "【확장 방향】",
-    d.extensionDirections,
+    "【6】 비교 구조",
+    d.comparisonStructure,
     "",
-    "【교과 연계】 " + d.subjects.join(", "),
+    "【6】 비교·대조표 초안",
+    formatComparisonTableForCopy(d.comparisonTable),
     "",
-    "【과정 점검】",
-    ...d.processChecklist.map((c, i) => `${i + 1}. ${c}`),
+    d.initialAnalysisProcessKind === "data_ai"
+      ? "【7】 초기 분석 예시 (AI 업무 적용 프로세스 5단계)"
+      : "【7】 초기 분석 예시 (과정중심 탐구 5단계)",
+    ...d.initialAnalysisExamples.map((s, i) =>
+      formatInitialAnalysisStepForCopy(s, i, d.initialAnalysisProcessKind)
+    ),
     "",
-    "【AI·출처·윤리】",
-    d.aiEthicsNote,
+    "【8】 기대 결과",
+    ...d.expectedResults.map((line, i) => `${i + 1}. ${line}`),
     "",
-    "【세특·생기부 문장 초안(참고)】",
-    d.recordSentence,
+    "【9】 확장 방향",
+    ...d.extensionDirections.map((line, i) => `${i + 1}. ${line}`),
+    "",
+    "【10】 교과 연계",
+    d.subjects.join(", "),
+    "",
+    "【11】 세특·생기부 문장 초안(참고)",
+    `"${d.recordSentence}"`,
+    "",
+    "【12】 관련 검색·참고 링크",
+    ...d.relatedSearchItems.flatMap((item, i) => [
+      `${i + 1}. ${item.title}`,
+      `   ${item.url}`,
+      `   ${item.summary}`,
+    ]),
   ].join("\n");
 }
 
 function formatDesignBlockWithSource(sourceQuestion: string, d: ExplorationDesign): string {
-  return [`【선택한 탐구 질문】 ${sourceQuestion}`, "", formatDesignBlock(d)].join("\n");
+  return [`【선택한 탐구 질문】 "${sourceQuestion}"`, "", formatDesignBlock(d)].join("\n");
 }
 
 function formatAllDesignsBlock(sourceQuestions: string[], designs: ExplorationDesign[]): string {
@@ -199,100 +357,156 @@ function formatAllDesignsBlock(sourceQuestions: string[], designs: ExplorationDe
 function DesignResultCard({
   design,
   index,
-  sourceQuestion,
-  onCopy,
 }: {
   design: ExplorationDesign;
   index: number;
-  sourceQuestion: string;
-  onCopy: (label: string, text: string) => void | Promise<void>;
 }) {
-  const n = index + 1;
-  const exportBlock = formatDesignBlockWithSource(sourceQuestion, design);
   return (
     <article
       className="topic-card design-result-card design-result-card--item"
       aria-labelledby={`design-card-${index}-title`}
     >
-      <div className="design-result-item__head">
-        <span className="design-result-item__badge">탐구 설계 {n}</span>
-        <h3 className="design-result-item__source-label">선택한 질문</h3>
-        <p className="design-result-item__source-q">{sourceQuestion}</p>
-      </div>
-
+      <p className="design-block-label">[1] 탐구 한 줄 요약</p>
       <h2 id={`design-card-${index}-title`} className="design-result-title">
-        {design.title}
+        {`"${design.oneLineSummary}"`}
       </h2>
+      <div className="design-key-terms-wrap">
+        <p className="design-sub-label design-sub-label--keyterms">핵심 용어·탐구 범위</p>
+        <p className="text-block design-key-terms">{design.keyTermsDefinition}</p>
+      </div>
 
-      <div className="section">
-        <h3>탐구 질문</h3>
-        <p className="text-block">{design.researchQuestion}</p>
+      <div className="section section--q2">
+        <h3>[2] 핵심 탐구 질문</h3>
+        <ol className="design-list design-list--numbered">
+          {design.coreResearchQuestions.map((q, i) => (
+            <li key={i}>{q}</li>
+          ))}
+        </ol>
       </div>
 
       <div className="section">
-        <h3>탐구 개요·목적</h3>
-        <p className="text-block">{design.overview}</p>
-      </div>
-
-      <div className="section">
-        <h3>탐구 방법 (단계)</h3>
-        <ul>
-          {design.methodSteps.map((m, i) => (
-            <li key={i}>{m}</li>
+        <h3>[3] 추천 참고 자료</h3>
+        <ul className="design-source-list">
+          {design.recommendedSources.map((s, i) => (
+            <li key={i} className="design-source-item">
+              <div className="design-source-item__head">
+                <span className="design-source-item__type">{SOURCE_TYPE_LABEL[s.sourceType]}</span>
+                <strong className="design-source-item__title">{s.title}</strong>
+              </div>
+              <a
+                className="design-source-item__url"
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {s.url}
+              </a>
+              <p className="design-source-item__rationale">{s.howItHelps}</p>
+            </li>
           ))}
         </ul>
       </div>
 
       <div className="section">
-        <h3>탐구 예시</h3>
-        <p className="text-block">{design.explorationExample}</p>
-      </div>
-
-      <div className="section">
-        <h3>기대 결과</h3>
-        <p className="text-block">{design.expectedResults}</p>
-      </div>
-
-      <div className="section">
-        <h3>확장 방향</h3>
-        <p className="text-block">{design.extensionDirections}</p>
-      </div>
-
-      <div className="section">
-        <h3>교과 연계</h3>
-        <div className="chips">
-          {design.subjects.map((s) => (
-            <span key={s}>{s}</span>
+        <h3>[4] 분석 프레임 (관점 3가지)</h3>
+        <div className="design-analysis-frames" role="list">
+          {design.analysisFrames.map((f, i) => (
+            <div key={i} className="design-analysis-frame" role="listitem">
+              <span className="design-analysis-frame__badge" aria-hidden>
+                관점 {i + 1}
+              </span>
+              <p className="design-analysis-frame__text">{f}</p>
+            </div>
           ))}
         </div>
       </div>
 
       <div className="section">
-        <h3>과정 점검</h3>
-        <ul>
-          {design.processChecklist.map((c, i) => (
-            <li key={i}>{c}</li>
+        <h3>[5] 탐구 방법</h3>
+        <dl className="design-dl">
+          <dt>데이터 수집</dt>
+          <dd>{design.researchExecution.dataCollection}</dd>
+          <dt>분석</dt>
+          <dd>{design.researchExecution.analysisMethod}</dd>
+          <dt>도구</dt>
+          <dd>{design.researchExecution.tools}</dd>
+          <dt>시각화</dt>
+          <dd>{design.researchExecution.visualization}</dd>
+        </dl>
+      </div>
+
+      <div className="section">
+        <h3>[6] 비교 구조</h3>
+        <p className="text-block">{design.comparisonStructure}</p>
+        <p className="design-sub-label design-sub-label--spaced">비교·대조표 초안</p>
+        <ComparisonTableView table={design.comparisonTable} />
+      </div>
+
+      <div className="section">
+        <h3>[7] 초기 분석 예시</h3>
+        <ol className="design-analysis-example-list">
+          {design.initialAnalysisExamples.map((step, i) => (
+            <li key={i} className="design-analysis-example-step">
+              <span className="design-analysis-example-phase">{step.phase}</span>
+              <dl className="design-analysis-example-dl">
+                <dt>절차(완료형)</dt>
+                <dd>{step.procedure}</dd>
+                <dt>
+                  {design.initialAnalysisProcessKind === "data_ai" ? "산출·수치" : "산출·근거"}
+                </dt>
+                <dd>{step.concreteOutput}</dd>
+                <dt>한계·주의</dt>
+                <dd>{step.caveat}</dd>
+              </dl>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="section">
+        <h3>[8] 기대 결과</h3>
+        <ul className="design-outline-list">
+          {design.expectedResults.map((line, i) => (
+            <li key={i}>{line}</li>
           ))}
         </ul>
       </div>
 
-      <div className="section section--ethics">
-        <h3>AI·출처·윤리</h3>
-        <p className="text-block text-block--muted">{design.aiEthicsNote}</p>
+      <div className="section">
+        <h3>[9] 확장 방향</h3>
+        <ul className="design-outline-list">
+          {design.extensionDirections.map((line, i) => (
+            <li key={i}>{line}</li>
+          ))}
+        </ul>
       </div>
 
       <div className="section">
-        <h3>세특·생기부 문장 초안 (참고)</h3>
-        <p className="text-block">{design.recordSentence}</p>
+        <h3>[10] 교과 연계</h3>
+        <div className="chips chips--design-subjects">
+          {design.subjects.map((s) => (
+            <span key={s} className={subjectChipClassName(s)}>
+              {s}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      <div className="section">
+        <h3>[11] 세특·생기부 문장 초안 (참고)</h3>
+        <p className="text-block">"{design.recordSentence}"</p>
         <p className="field-hint" style={{ marginTop: "0.5rem" }}>
-          실제 기재는 학교 기재요령·교사 관찰에 따릅니다.
+          * 실제 기재는 학교 기재요령·교사 관찰에 따릅니다.
         </p>
       </div>
 
-      <div className="design-result-item__copy-footer">
-        <button type="button" className="btn-ghost" onClick={() => onCopy(`설계${n}`, exportBlock)}>
-          복사
-        </button>
+      <div className="section">
+        <h3>[12] 관련 검색·참고 링크</h3>
+        <ol className="design-related-list">
+          {design.relatedSearchItems.map((item, i) => (
+            <RelatedSearchCard key={i} item={item} index={i} />
+          ))}
+        </ol>
       </div>
     </article>
   );
@@ -393,14 +607,14 @@ export default function App() {
   const [inquiryType, setInquiryType] = useState("");
 
   const [questions, setQuestions] = useState<string[] | null>(null);
-  const [selectedQuestionIdxs, setSelectedQuestionIdxs] = useState<number[]>([]);
+  const [selectedQuestionIdx, setSelectedQuestionIdx] = useState<number | null>(null);
   const [designSourceQuestions, setDesignSourceQuestions] = useState<string[]>([]);
   const [designResults, setDesignResults] = useState<ExplorationDesign[]>([]);
 
   const [questionsLoading, setQuestionsLoading] = useState(false);
   const [designLoading, setDesignLoading] = useState(false);
+  const [copyFeedback, setCopyFeedback] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
 
   const errorBannerRef = useRef<HTMLDivElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -526,24 +740,10 @@ export default function App() {
     aiUsageLevel,
   ]);
 
-  const showToast = useCallback((msg: string) => {
-    setToast(msg);
-    window.setTimeout(() => setToast(null), 2200);
-  }, []);
-
-  const onCopy = useCallback(
-    async (label: string, text: string) => {
-      const ok = await copyText(text);
-      logEvent("copy", { section: label });
-      showToast(ok ? "복사했습니다." : "복사에 실패했습니다. 브라우저 권한을 확인하세요.");
-    },
-    [showToast]
-  );
-
   const resetFlow = useCallback(() => {
     setStep(1);
     setQuestions(null);
-    setSelectedQuestionIdxs([]);
+    setSelectedQuestionIdx(null);
     setDesignSourceQuestions([]);
     setDesignResults([]);
     setInterestTopicDetail("");
@@ -670,7 +870,7 @@ export default function App() {
     if (step <= 1) return;
     if (step === 4) {
       setQuestions(null);
-      setSelectedQuestionIdxs([]);
+      setSelectedQuestionIdx(null);
     }
     if (step === 5) {
       setDesignResults([]);
@@ -688,7 +888,7 @@ export default function App() {
     }
     setQuestionsLoading(true);
     setQuestions(null);
-    setSelectedQuestionIdxs([]);
+    setSelectedQuestionIdx(null);
     logEvent("questions_click");
     try {
       const data = await fetchResearchQuestions(explorationPayload());
@@ -703,32 +903,25 @@ export default function App() {
     }
   };
 
-  const toggleQuestionPick = useCallback(
-    (idx: number) => {
-      setSelectedQuestionIdxs((prev) => {
-        if (prev.includes(idx)) return prev.filter((i) => i !== idx);
-        if (prev.length >= MAX_EXPLORATION_QUESTION_PICKS) {
-          showToast(`탐구 질문은 최대 ${MAX_EXPLORATION_QUESTION_PICKS}개까지 선택할 수 있습니다.`);
-          return prev;
-        }
-        return [...prev, idx].sort((a, b) => a - b);
-      });
-    },
-    [showToast]
-  );
+  const toggleQuestionPick = useCallback((idx: number) => {
+    setSelectedQuestionIdx((prev) => (prev === idx ? null : idx));
+  }, []);
 
   const onGenerateDesign = async () => {
     if (!questions?.length) {
       setError("먼저 탐구 질문을 생성하세요.");
       return;
     }
-    const pickedTexts = selectedQuestionIdxs
-      .map((i) => questions[i]?.trim())
-      .filter((q): q is string => Boolean(q));
-    if (pickedTexts.length === 0) {
-      setError("탐구 질문을 1개 이상 선택하세요.");
+    if (selectedQuestionIdx === null) {
+      setError("탐구 질문을 1개 선택하세요.");
       return;
     }
+    const one = questions[selectedQuestionIdx]?.trim();
+    if (!one) {
+      setError("탐구 질문을 1개 선택하세요.");
+      return;
+    }
+    const pickedTexts = [one];
     setError(null);
     const err = validateFullExploration();
     if (err) {
@@ -759,6 +952,31 @@ export default function App() {
   };
 
   const loadingOverlay = questionsLoading || designLoading;
+
+  /** 생성 경과: 0 기본 → 30초 → 60초 → 90초 → 120초(별도 문구) */
+  const [loadingHintLevel, setLoadingHintLevel] = useState<0 | 1 | 2 | 3 | 4>(0);
+  useEffect(() => {
+    if (!loadingOverlay) {
+      setLoadingHintLevel(0);
+      return;
+    }
+    setLoadingHintLevel(0);
+    const id30 = window.setTimeout(() => setLoadingHintLevel(1), 30000);
+    const id60 = window.setTimeout(() => setLoadingHintLevel(2), 60000);
+    const id90 = window.setTimeout(() => setLoadingHintLevel(3), 90000);
+    const id120 = window.setTimeout(() => setLoadingHintLevel(4), 120000);
+    return () => {
+      window.clearTimeout(id30);
+      window.clearTimeout(id60);
+      window.clearTimeout(id90);
+      window.clearTimeout(id120);
+    };
+  }, [loadingOverlay]);
+
+  const showCopyFeedback = useCallback((msg: string) => {
+    setCopyFeedback(msg);
+    window.setTimeout(() => setCopyFeedback(null), 3200);
+  }, []);
 
   const keywordPlaceholders = ["예: 뇌과학", "예: 데이터", "예: 사회문제"];
 
@@ -814,11 +1032,6 @@ export default function App() {
         </ul>
       </section>
 
-      {toast && (
-        <div className="alert alert--success" role="status" aria-live="polite">
-          {toast}
-        </div>
-      )}
       {error && (
         <div
           id="form-error-banner"
@@ -1418,7 +1631,7 @@ export default function App() {
                 <div>
                   <h2 id="sec-s4">STEP 4 — 탐구 질문 생성·선택</h2>
                   <p className="section-desc">
-                    후보 질문을 만든 뒤, 원하는 만큼 고르면 질문마다 각각 다른 탐구 활동 설계가 만들어집니다.
+                    여러 후보 탐구 질문 중 가장 적합하다고 판단되는 1개를 선택하면, 해당 질문을 기반으로 탐구 활동 설계가 생성됩니다.
                   </p>
                 </div>
               </div>
@@ -1432,16 +1645,17 @@ export default function App() {
               {questions && questions.length > 0 && (
                 <>
                   <p className="step4-pick-count" aria-live="polite">
-                    현재 <strong>{selectedQuestionIdxs.length}</strong>개 선택됨
-                    {selectedQuestionIdxs.length >= MAX_EXPLORATION_QUESTION_PICKS ? " (최대)" : ""}
+                    {selectedQuestionIdx === null
+                      ? "질문을 하나 선택하세요."
+                      : "선택한 질문이 적용됩니다. 다른 질문을 고르면 선택이 바뀝니다."}
                   </p>
                   <ul className="question-card-list">
                     {questions.map((q, idx) => {
-                      const picked = selectedQuestionIdxs.includes(idx);
+                      const picked = selectedQuestionIdx === idx;
                       return (
                         <li key={idx}>
                           <article className={`question-card${picked ? " question-card--selected" : ""}`}>
-                            <p className="question-card__text">{q}</p>
+                            <p className="question-card__text">"{q}"</p>
                             <button
                               type="button"
                               className={picked ? "btn-pick btn-pick--active" : "btn-pick"}
@@ -1463,13 +1677,9 @@ export default function App() {
                     type="button"
                     className="btn-cta"
                     onClick={onGenerateDesign}
-                    disabled={designLoading || selectedQuestionIdxs.length === 0}
+                    disabled={designLoading || selectedQuestionIdx === null}
                   >
-                    {designLoading
-                      ? "설계 생성 중…"
-                      : selectedQuestionIdxs.length > 1
-                        ? `선택한 ${selectedQuestionIdxs.length}개 질문 각각 — 탐구 설계 생성`
-                        : "선택한 질문으로 탐구 설계 생성"}
+                    {designLoading ? "설계 생성 중…" : "선택한 질문으로 탐구 설계 생성"}
                   </button>
                 </div>
               )}
@@ -1483,40 +1693,45 @@ export default function App() {
               className="results-block"
               aria-label="탐구 설계 결과"
             >
-              <h2 className="results-title">
-                STEP 5 — 탐구 설계 결과 ({designResults.length}건)
-              </h2>
+              <h2 className="results-title">STEP 5 — 탐구 설계 결과</h2>
               {designSourceQuestions.length > 0 && (
                 <div className="selected-questions-summary" aria-labelledby="picked-questions-title">
-                  <h3 id="picked-questions-title" className="results-subheading">
-                    선택한 탐구 질문 ({designSourceQuestions.length}개)
+                  <h3 id="picked-questions-title" className="selected-questions-summary__label">
+                    선택한 탐구 질문
                   </h3>
-                  <p className="selected-questions-summary__lead">
-                    아래 카드는 위 목록과 같은 순서입니다. 질문마다 별도의 탐구 활동 설계입니다.
-                  </p>
-                  <ol className="selected-questions-list">
+                  <div className="selected-questions-picked">
                     {designSourceQuestions.map((q, i) => (
-                      <li key={i}>{q}</li>
+                      <p key={i} className="selected-questions-picked__text">
+                        <span className="selected-questions-picked__quote">"{q}"</span>
+                      </p>
                     ))}
-                  </ol>
+                  </div>
                 </div>
               )}
               <div className="design-results-stack">
                 {designResults.map((d, i) => (
-                  <DesignResultCard
-                    key={i}
-                    design={d}
-                    index={i}
-                    sourceQuestion={designSourceQuestions[i] ?? ""}
-                    onCopy={onCopy}
-                  />
+                  <DesignResultCard key={i} design={d} index={i} />
                 ))}
               </div>
               <div className="copy-all-wrap copy-all-wrap--results-footer">
                 <button
                   type="button"
                   className="btn-secondary"
-                  onClick={() => onCopy("전체", formatAllDesignsBlock(designSourceQuestions, designResults))}
+                  onClick={async () => {
+                    try {
+                      const text = formatAllDesignsBlock(designSourceQuestions, designResults);
+                      const ok = await copyText(text);
+                      logEvent("copy", { section: "전체" });
+                      showCopyFeedback(
+                        ok
+                          ? "복사되었습니다."
+                          : "복사에 실패했습니다. 브라우저 권한을 확인하세요."
+                      );
+                    } catch (e) {
+                      console.error(e);
+                      showCopyFeedback("복사 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.");
+                    }
+                  }}
                 >
                   전체 설계 복사
                 </button>
@@ -1548,21 +1763,49 @@ export default function App() {
             <div className="form-loading-inner">
               <span className="form-loading-spinner" aria-hidden />
               <p className="form-loading-text">
-                {designLoading
-                  ? selectedQuestionIdxs.length > 1
-                    ? `선택한 ${selectedQuestionIdxs.length}개 질문 각각에 대해 탐구 설계를 작성하는 중입니다…`
-                    : "탐구 설계를 작성하는 중입니다…"
-                  : "탐구 질문을 만드는 중입니다…"}
+                {designLoading ? "탐구 설계를 작성하는 중입니다…" : "탐구 질문을 만드는 중입니다…"}
               </p>
-              <p className="form-loading-hint">
-                {designLoading && selectedQuestionIdxs.length > 1
-                  ? "질문 수만큼 생성하므로 다소 시간이 걸릴 수 있습니다."
-                  : "보통 수십 초 이내에 완료됩니다."}
+              <p
+                className={
+                  loadingHintLevel >= 1
+                    ? `form-loading-hint form-loading-hint--slow${
+                        loadingHintLevel >= 2 ? " form-loading-hint--very-slow" : ""
+                      }${loadingHintLevel >= 3 ? " form-loading-hint--extra-slow" : ""}${
+                        loadingHintLevel >= 4 ? " form-loading-hint--long-wait" : ""
+                      }`
+                    : "form-loading-hint"
+                }
+              >
+                {loadingHintLevel === 0 && <>보통 수십 초 이내에 완료됩니다.</>}
+                {loadingHintLevel === 1 &&
+                  (designLoading ? (
+                    <>1분 이상 걸릴 수 있습니다. 이 창을 닫지 마세요.</>
+                  ) : (
+                    <>조금 오래 걸릴 수 있습니다. 잠시만 기다려 주세요.</>
+                  ))}
+                {loadingHintLevel === 2 &&
+                  (designLoading
+                    ? "더 알찬 설계를 위해 시간이 조금 오래 걸릴 수 있어요. 창을 닫지 마세요."
+                    : "더 나은 질문 후보를 다듬는 데 시간이 걸릴 수 있습니다. 잠시만 더 기다려 주세요.")}
+                {loadingHintLevel === 3 &&
+                  (designLoading
+                    ? "세부 항목을 꼼꼼히 채우는 중이에요. 창을 닫지 마세요."
+                    : "질문을 다듬는 마무리 단계예요. 잠시만 기다려 주세요.")}
+                {loadingHintLevel >= 4 &&
+                  (designLoading
+                    ? "거의 마무리 단계예요. 창을 닫지 말고 조금만 더 기다려 주세요."
+                    : "질문 후보를 정리하는 마지막 단계예요. 잠시만 기다려 주세요.")}
               </p>
             </div>
           </div>
         )}
       </div>
+
+      {copyFeedback && (
+        <div className="copy-toast" role="status" aria-live="polite">
+          {copyFeedback}
+        </div>
+      )}
     </div>
   );
 }

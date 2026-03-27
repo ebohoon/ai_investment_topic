@@ -42,19 +42,81 @@ export type RecommendApiResponse = {
   topics: TopicCard[];
 };
 
-export type ExplorationDesign = {
+/** 추천 참고 자료 1건 */
+export type RecommendedSource = {
   title: string;
-  researchQuestion: string;
-  overview: string;
-  methodSteps: string[];
-  /** 대상·자료·분석을 구체화한 탐구 예시(주차 일정식 서술 아님) */
-  explorationExample: string;
-  expectedResults: string;
-  extensionDirections: string;
+  url: string;
+  sourceType: "youtube" | "paper_pdf" | "institution" | "news";
+  /** 주제에 어떻게 도움이 되는지 논리적으로 한 덩어리 설명 */
+  howItHelps: string;
+};
+
+/** [12] 관련 검색 1건 */
+export type RelatedSearchItem = {
+  title: string;
+  url: string;
+  summary: string;
+};
+
+/** [6] 비교·대조표(구조화) */
+export type ComparisonTableRow = { cells: string[] };
+export type ComparisonTable = {
+  columnHeaders: string[];
+  rows: ComparisonTableRow[];
+};
+
+/** [7] 초기 분석 예시 — 탐구 유형에 따라 phase 집합이 다름(순서 고정) */
+export type InitialAnalysisProcessKind = "data_ai" | "general";
+
+export type InitialAnalysisStep = {
+  phase:
+    | "문제 정의"
+    | "데이터 수집"
+    | "데이터 분석 및 전처리"
+    | "AI 모델링"
+    | "AI 적용"
+    | "탐구 문제·목표 정리"
+    | "자료·근거 수집"
+    | "분석·해석"
+    | "종합·검토"
+    | "정리·성찰·발표";
+  procedure: string;
+  concreteOutput: string;
+  caveat: string;
+};
+
+/** 실행 가능한 탐구·연구 설계 (질문 1개당 1건) */
+export type ExplorationDesign = {
+  oneLineSummary: string;
+  /** 핵심 용어·탐구 범위(작업 정의) */
+  keyTermsDefinition: string;
+  coreResearchQuestions: [string, string, string];
+  recommendedSources: RecommendedSource[];
+  analysisFrames: [string, string, string];
+  researchExecution: {
+    dataCollection: string;
+    analysisMethod: string;
+    tools: string;
+    visualization: string;
+  };
+  comparisonStructure: string;
+  /** 비교·대조표 초안(열·행 배열; UI는 HTML 테이블로 렌더) */
+  comparisonTable: ComparisonTable;
+  /** 데이터·AI 탐구 vs 과정중심 탐구 — [5][7] 단계 체계 구분 */
+  initialAnalysisProcessKind: InitialAnalysisProcessKind;
+  initialAnalysisExamples: [
+    InitialAnalysisStep,
+    InitialAnalysisStep,
+    InitialAnalysisStep,
+    InitialAnalysisStep,
+    InitialAnalysisStep,
+  ];
+  expectedResults: string[];
+  extensionDirections: string[];
   subjects: string[];
   recordSentence: string;
-  aiEthicsNote: string;
-  processChecklist: string[];
+  /** [12] 관련 자료 링크 10건 */
+  relatedSearchItems: RelatedSearchItem[];
 };
 
 export type QuestionsApiResponse = {

@@ -263,12 +263,23 @@
   margin-top: 0.5rem;
 }
 
-.design-result-title {
-  font-size: 1.1rem;
+/* [1] 탐구 한 줄 요약 — 문구·본문 제목 톤 유지(작은 대문자 라벨 아님) */
+.design-block-label {
+  margin: 0 0 0.65rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  margin: 0 0 1rem;
   line-height: 1.45;
   letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--text);
+}
+
+.design-result-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  margin: 0 0 1rem;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
   padding-bottom: 0.85rem;
   border-bottom: 1px solid rgba(100, 130, 180, 0.12);
 }
@@ -283,45 +294,366 @@
   margin-top: 0;
 }
 
-.design-result-item__head {
+.design-result-card--item .design-result-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.65;
+  letter-spacing: -0.01em;
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  border-left: 4px solid rgba(56, 189, 248, 0.5);
+  background: rgba(15, 23, 42, 0.45);
+  color: #f1f5f9;
+  border-bottom: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.design-result-card--item .section h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  color: var(--text);
+  margin: 0 0 0.55rem;
+}
+
+.design-sub-label {
+  margin: 0.75rem 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary);
+}
+
+.design-sub-label--spaced {
+  margin-top: 1rem;
+}
+
+.design-sub-label--keyterms {
+  margin: 0 0 0.5rem;
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0.02em;
+  font-size: 0.85rem;
+}
+
+/* [1] 핵심 용어 블록 — [2] 질문과 시각적으로 분리 */
+.design-result-card--item .design-key-terms-wrap {
+  margin-top: 0.5rem;
+  margin-bottom: 1.75rem;
+  padding: 1rem 1rem 1.15rem;
+  border-radius: 12px;
+  border: 1px solid rgba(100, 130, 180, 0.28);
+  background: rgba(56, 189, 248, 0.06);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.design-result-card--item .section--q2 {
+  margin-top: 0;
+  padding-top: 1.15rem;
+  border-top: 1px solid rgba(100, 130, 180, 0.22);
+}
+
+.design-key-terms {
+  margin-bottom: 0;
+}
+
+/* [6] 비교표: 열 정렬 유지(가로 스크롤), 줄바꿈은 pre에서만 */
+.design-comparison-table-wrap {
+  margin-top: 0.35rem;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 10px;
+  border: 1px solid rgba(100, 130, 180, 0.22);
+  background: rgba(15, 23, 42, 0.45);
+  -webkit-overflow-scrolling: touch;
+}
+
+.design-comparison-table {
+  margin: 0;
+  padding: 0.75rem 0.85rem;
+  font-family: ui-monospace, "Cascadia Code", "Consolas", "Malgun Gothic", monospace;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  white-space: pre;
+  word-wrap: normal;
+  overflow: visible;
+  width: max-content;
+  min-width: 100%;
+  box-sizing: border-box;
+  color: var(--text);
+  tab-size: 4;
+}
+
+.design-comparison-table-wrap--md {
+  background: rgba(248, 250, 252, 0.06);
+}
+
+.design-comparison-table-md {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.design-comparison-table-md th,
+.design-comparison-table-md td {
+  border: 1px solid rgba(100, 130, 180, 0.35);
+  padding: 0.45rem 0.55rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.design-comparison-table-md thead th {
+  background: rgba(56, 189, 248, 0.1);
+  font-weight: 600;
+}
+
+.design-comparison-table-md tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.25);
+}
+
+.design-list--numbered {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.design-list--numbered li {
+  margin-bottom: 0.45rem;
+}
+
+/* [4] 분석 프레임 — 불릿 대신 카드형 박스 */
+.design-analysis-frames {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+}
+
+@media (max-width: 720px) {
+  .design-analysis-frames {
+    grid-template-columns: 1fr;
+  }
+}
+
+.design-analysis-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  min-height: 0;
+  min-width: 0;
+  padding: 0.8rem 0.9rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(100, 130, 180, 0.22);
+  background: rgba(15, 23, 42, 0.4);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.design-result-card--item .design-analysis-frame {
+  border-color: rgba(56, 189, 248, 0.22);
+  background: linear-gradient(
+    165deg,
+    rgba(56, 189, 248, 0.08) 0%,
+    rgba(15, 23, 42, 0.5) 100%
+  );
+}
+
+.design-analysis-frame__badge {
+  align-self: flex-start;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #7dd3fc;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+}
+
+.design-analysis-frame__text {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.design-analysis-example-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.design-analysis-example-step {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  background: linear-gradient(
+    165deg,
+    rgba(56, 189, 248, 0.06) 0%,
+    rgba(15, 23, 42, 0.45) 100%
+  );
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.design-analysis-example-phase {
+  display: inline-block;
+  margin-bottom: 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #7dd3fc;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.28);
+}
+
+.design-analysis-example-dl {
+  margin: 0;
+  display: grid;
+  gap: 0.5rem 0;
+}
+
+.design-analysis-example-dl dt {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+.design-analysis-example-dl dd {
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.design-analysis-example-dl dd:last-child {
+  margin-bottom: 0;
+}
+
+/* [8][9] 기대 결과·확장 방향 — 짧은 항목 목록 */
+.design-result-card--item .design-outline-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.design-result-card--item .design-outline-list li {
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.design-source-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* .section ul 기본 padding-left(1.2rem)보다 우선 — [3] 제목·왼쪽 선과 카드 시작선 정렬 */
+.design-result-card--item .design-source-list {
+  padding-left: 0;
+  margin-left: 0;
+}
+
+.design-source-item {
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(100, 130, 180, 0.18);
+  background: rgba(100, 130, 180, 0.04);
+}
+
+.design-source-item__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.45rem 0.65rem;
   margin-bottom: 0.35rem;
 }
 
-.design-result-item__badge {
+.design-source-item__type {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary);
+  background: rgba(56, 189, 248, 0.12);
+  padding: 0.15rem 0.45rem;
+  border-radius: 6px;
+}
+
+.design-source-item__title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.design-source-item__url {
   display: inline-block;
+  font-size: 0.78rem;
+  word-break: break-all;
+  margin-bottom: 0.5rem;
+  color: #7dd3fc;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.design-source-item__url:hover {
+  color: #bae6fd;
+}
+
+.design-source-item__rationale {
+  margin: 0.45rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(100, 130, 180, 0.2);
+  border-left: 4px solid rgba(56, 189, 248, 0.45);
+  background: rgba(56, 189, 248, 0.06);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.design-dl {
+  margin: 0;
+}
+
+.design-dl dt {
   font-size: 0.72rem;
   font-weight: 700;
-  letter-spacing: 0.03em;
-  color: var(--primary);
-  background: rgba(56, 189, 248, 0.1);
-  border: 1px solid rgba(56, 189, 248, 0.22);
-  padding: 0.25rem 0.55rem;
-  border-radius: 8px;
-  margin-bottom: 0.65rem;
-}
-
-.design-result-item__source-label {
-  font-size: 0.75rem;
-  font-weight: 600;
   color: var(--text-muted);
-  margin: 0 0 0.35rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 0.65rem;
 }
 
-.design-result-item__source-q {
-  margin: 0;
-  font-size: 0.875rem;
+.design-dl dt:first-child {
+  margin-top: 0;
+}
+
+.design-dl dd {
+  margin: 0.25rem 0 0;
+  font-size: 0.9rem;
   line-height: 1.55;
   color: var(--text);
-  padding: 0.65rem 0.75rem;
-  border-radius: var(--radius-lg);
-  background: rgba(100, 130, 180, 0.06);
-  border-left: 3px solid rgba(56, 189, 248, 0.45);
-}
-
-.design-result-item__copy-footer {
-  margin-top: 1.25rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(100, 130, 180, 0.12);
 }
 
 /* —— Top bar —— */
@@ -421,6 +753,27 @@
 .info-guide strong {
   color: var(--text);
   font-weight: 600;
+}
+
+/* 전체 설계 복사 — window.alert 대신 화면 하단 고정 토스트 */
+.copy-toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10050;
+  max-width: min(92vw, 26rem);
+  padding: 0.8rem 1.15rem;
+  border-radius: var(--radius-lg);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.45;
+  text-align: center;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(34, 211, 238, 0.38);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
 }
 
 /* 이용 안내 — 가독성 */
@@ -552,6 +905,28 @@
   margin: 0;
   font-size: 0.78rem;
   color: var(--text-muted);
+}
+
+.form-loading-hint--slow {
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(56, 189, 248, 0.2);
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: #bae6fd;
+}
+
+.form-loading-hint--very-slow {
+  color: #e0f2fe;
+}
+
+.form-loading-hint--extra-slow {
+  font-size: 0.83rem;
+  letter-spacing: -0.01em;
+}
+
+.form-loading-hint--long-wait {
+  color: #f0f9ff;
 }
 
 @keyframes aicc-spin {
@@ -895,17 +1270,13 @@ textarea.input-base {
   background: var(--surface-elevated);
 }
 
-.results-subheading {
-  margin: 0 0 0.35rem;
-  font-size: 1rem;
+/* STEP5 — '선택한 탐구 질문' 라벨 vs 질문 본문 시각적 구분 */
+.selected-questions-summary__label {
+  margin: 0 0 0.75rem;
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--text);
-}
-
-.selected-questions-summary__lead {
-  margin: 0 0 0.65rem;
-  font-size: 0.8125rem;
-  line-height: 1.5;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--text-muted);
 }
 
@@ -923,6 +1294,29 @@ textarea.input-base {
 
 .selected-questions-list li:last-child {
   margin-bottom: 0;
+}
+
+.selected-questions-picked {
+  margin: 0;
+  padding: 0.9rem 1rem 0.95rem;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(56, 189, 248, 0.2);
+  border-left: 4px solid rgba(56, 189, 248, 0.55);
+  background: rgba(15, 23, 42, 0.45);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.selected-questions-picked__text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--text);
+  font-weight: 400;
+}
+
+.selected-questions-picked__quote {
+  font-weight: 600;
+  color: #f1f5f9;
 }
 
 .btn-secondary {
@@ -1007,6 +1401,12 @@ textarea.input-base {
   font-size: 0.875rem;
 }
 
+.text-block--small {
+  font-size: 0.82rem;
+  line-height: 1.55;
+  margin-top: 0.35rem;
+}
+
 .section--ethics {
   padding: 0.85rem 1rem;
   border-radius: 12px;
@@ -1027,6 +1427,175 @@ textarea.input-base {
   background: var(--surface-elevated);
   border: 1px solid var(--border);
   color: var(--text);
+}
+
+/* [10] 교과 연계 — 과목별 색(탐구 설계 카드) */
+.chips--design-subjects {
+  gap: 0.45rem;
+}
+
+.chips--design-subjects .chip-subject {
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.chips--design-subjects .chip-subject--korean {
+  background: rgba(59, 130, 246, 0.14);
+  border-color: rgba(59, 130, 246, 0.45);
+  color: #93c5fd;
+}
+
+.chips--design-subjects .chip-subject--math {
+  background: rgba(168, 85, 247, 0.14);
+  border-color: rgba(168, 85, 247, 0.45);
+  color: #d8b4fe;
+}
+
+.chips--design-subjects .chip-subject--english {
+  background: rgba(236, 72, 153, 0.12);
+  border-color: rgba(236, 72, 153, 0.42);
+  color: #f9a8d4;
+}
+
+.chips--design-subjects .chip-subject--social {
+  background: rgba(234, 179, 8, 0.12);
+  border-color: rgba(234, 179, 8, 0.4);
+  color: #fde047;
+}
+
+.chips--design-subjects .chip-subject--science {
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.42);
+  color: #86efac;
+}
+
+.chips--design-subjects .chip-subject--info {
+  background: rgba(6, 182, 212, 0.14);
+  border-color: rgba(6, 182, 212, 0.45);
+  color: #67e8f9;
+}
+
+.chips--design-subjects .chip-subject--art {
+  background: rgba(244, 63, 94, 0.12);
+  border-color: rgba(244, 63, 94, 0.4);
+  color: #fda4af;
+}
+
+.chips--design-subjects .chip-subject--music {
+  background: rgba(139, 92, 246, 0.14);
+  border-color: rgba(139, 92, 246, 0.42);
+  color: #c4b5fd;
+}
+
+.chips--design-subjects .chip-subject--pe {
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.42);
+  color: #fdba74;
+}
+
+.chips--design-subjects .chip-subject--home {
+  background: rgba(20, 184, 166, 0.12);
+  border-color: rgba(20, 184, 166, 0.42);
+  color: #5eead4;
+}
+
+.chips--design-subjects .chip-subject--alt0 {
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.35);
+  color: #e2e8f0;
+}
+
+.chips--design-subjects .chip-subject--alt1 {
+  background: rgba(99, 102, 241, 0.14);
+  border-color: rgba(99, 102, 241, 0.4);
+  color: #a5b4fc;
+}
+
+.chips--design-subjects .chip-subject--alt2 {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.38);
+  color: #6ee7b7;
+}
+
+.chips--design-subjects .chip-subject--alt3 {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.38);
+  color: #fcd34d;
+}
+
+.chips--design-subjects .chip-subject--alt4 {
+  background: rgba(14, 165, 233, 0.12);
+  border-color: rgba(14, 165, 233, 0.4);
+  color: #7dd3fc;
+}
+
+.chips--design-subjects .chip-subject--alt5 {
+  background: rgba(217, 70, 239, 0.1);
+  border-color: rgba(217, 70, 239, 0.38);
+  color: #e879f9;
+}
+
+/* [12] 관련 검색 — 카드(참고 이미지 스타일) */
+.design-related-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.design-related-card {
+  display: flex;
+  gap: 0.5rem 0.65rem;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0.75rem 0.85rem 0.8rem 0.75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  background: rgba(241, 245, 249, 0.06);
+  border-left: 4px solid rgba(59, 130, 246, 0.75);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.design-related-card__num {
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.35;
+  min-width: 1.5rem;
+}
+
+.design-related-card__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.design-related-card__link {
+  display: inline;
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.45;
+  color: #38bdf8;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  word-break: break-word;
+}
+
+.design-related-card__link:hover {
+  color: #7dd3fc;
+}
+
+.design-related-card__summary {
+  margin: 0.45rem 0 0;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: var(--text-muted);
 }
 
 .copy-row {

@@ -3,7 +3,9 @@ import {
   buildDesignSystemPrompt,
   buildQuestionsSystemPrompt,
   FEW_SHOT_DESIGN_ASSISTANT,
+  FEW_SHOT_DESIGN_ASSISTANT_GENERAL,
 } from "../prompts/system.js";
+import { inferInitialAnalysisProcessKind } from "./initialAnalysisProfile.js";
 import type { ExplorationBody } from "../schemas/input.js";
 import { isMiddleSchoolGrade } from "./middleCurriculum.js";
 import { buildExplorationDesignJsonSchema } from "../schemas/designJsonSchema.js";
@@ -15,6 +17,36 @@ import {
   type QuestionsResponse,
 } from "../schemas/output.js";
 import { readRuntimeEnv } from "./runtimeEnv.js";
+
+/** 모델이 ---, ___ 등만 넣는 경우 화면에 의미 없는 표가 되어 치환 */
+function isPlaceholderComparisonCell(cell: string): boolean {
+  const t = cell.trim();
+  if (t === "") return true;
+  if (/^(?:___|…|\.{3,})$/.test(t)) return true;
+  if (/^[\-_]{2,}$/.test(t)) return true;
+  if (/^=+$/.test(t)) return true;
+  return false;
+}
+
+const COMPARISON_CELL_PLACEHOLDER_HINT =
+  "※ 이 칸에는 비교 대상별로 측정·관찰·설문 결과를 한국어로 한 줄 이상 적습니다(가상 수치·임의 단정 금지).";
+
+function sanitizeComparisonTable(
+  table: ExplorationDesign["comparisonTable"]
+): ExplorationDesign["comparisonTable"] {
+  return {
+    columnHeaders: table.columnHeaders,
+    rows: table.rows.map((row) => ({
+      cells: row.cells.map((c) =>
+        isPlaceholderComparisonCell(c) ? COMPARISON_CELL_PLACEHOLDER_HINT : c
+      ),
+    })),
+  };
+}
+
+function withSanitizedComparisonTable(d: ExplorationDesign): ExplorationDesign {
+  return { ...d, comparisonTable: sanitizeComparisonTable(d.comparisonTable) };
+}
 
 function buildExplorationContext(
   body: ExplorationBody,
@@ -107,11 +139,16 @@ function buildQuestionsUserContent(
 function buildDesignUserContent(
   body: ExplorationBody,
   allowedSubjects: string[],
-  selectedQuestion: string
+  selectedQuestion: string,
+  processKind: ReturnType<typeof inferInitialAnalysisProcessKind>
 ): string {
+  const fewShot =
+    processKind === "data_ai"
+      ? FEW_SHOT_DESIGN_ASSISTANT
+      : FEW_SHOT_DESIGN_ASSISTANT_GENERAL;
   return [
     "아래는 학생 입력과 선택된 탐구 질문 하나입니다. 이 질문에 대응하는 탐구 활동 설계를 JSON으로 생성하세요.",
-    FEW_SHOT_DESIGN_ASSISTANT,
+    fewShot,
     "---",
     buildExplorationContext(body, allowedSubjects),
     "",
@@ -165,9 +202,11 @@ async function callDesignModel(
   model: string,
   system: string,
   userContent: string,
-  allowedSubjects: string[]
+  allowedSubjects: string[],
+  processKind: ReturnType<typeof inferInitialAnalysisProcessKind>
 ): Promise<string> {
-  const schema = buildExplorationDesignJsonSchema(allowedSubjects);
+  const schema = buildExplorationDesignJsonSchema(allowedSubjects, processKind);
+  const t0 = Date.now();
   const completion = await client.chat.completions.create({
     model,
     temperature: 0.55,
@@ -184,6 +223,15 @@ async function callDesignModel(
       { role: "user", content: userContent },
     ],
   });
+  const ms = Date.now() - t0;
+  const usage = completion.usage;
+  console.info(
+    "[explorationOpenai] design completion",
+    `${ms}ms`,
+    usage
+      ? `prompt_tokens=${usage.prompt_tokens} completion_tokens=${usage.completion_tokens} total=${usage.total_tokens}`
+      : "(usage n/a)"
+  );
   const raw = completion.choices[0]?.message?.content;
   if (!raw) throw new Error("모델 응답이 비어 있습니다.");
   return raw;
@@ -256,20 +304,39 @@ export async function generateExplorationDesign(
   const key = readRuntimeEnv("OPENAI_API_KEY");
   if (!key) throw openAiKeyError();
 
+  const processKind = inferInitialAnalysisProcessKind(body.inquiryType);
   const model = readRuntimeEnv("OPENAI_MODEL") ?? "gpt-4o-mini";
   const client = new OpenAI({ apiKey: key });
-  const system = buildDesignSystemPrompt(allowedSubjects, body, selectedQuestion);
-  let userContent = buildDesignUserContent(body, allowedSubjects, selectedQuestion);
+  const system = buildDesignSystemPrompt(
+    allowedSubjects,
+    body,
+    selectedQuestion,
+    processKind
+  );
+  let userContent = buildDesignUserContent(
+    body,
+    allowedSubjects,
+    selectedQuestion,
+    processKind
+  );
 
   let lastErr = "알 수 없는 오류";
+  const designStarted = Date.now();
   for (let attempt = 0; attempt < 2; attempt++) {
     let raw: string;
     try {
-      raw = await callDesignModel(client, model, system, userContent, allowedSubjects);
+      raw = await callDesignModel(
+        client,
+        model,
+        system,
+        userContent,
+        allowedSubjects,
+        processKind
+      );
     } catch (e) {
       lastErr = e instanceof Error ? e.message : "모델 호출 실패";
       userContent =
-        buildDesignUserContent(body, allowedSubjects, selectedQuestion) +
+        buildDesignUserContent(body, allowedSubjects, selectedQuestion, processKind) +
         "\n\n직전 요청이 실패했습니다. 동일 규칙으로 설계 JSON만 다시 출력하세요.";
       continue;
     }
@@ -280,7 +347,7 @@ export async function generateExplorationDesign(
     } catch {
       lastErr = "모델 JSON 파싱 실패";
       userContent =
-        buildDesignUserContent(body, allowedSubjects, selectedQuestion) +
+        buildDesignUserContent(body, allowedSubjects, selectedQuestion, processKind) +
         "\n\n올바른 JSON 객체만 다시 출력하세요.";
       continue;
     }
@@ -289,8 +356,16 @@ export async function generateExplorationDesign(
     if (!result.success) {
       lastErr = result.error.flatten().formErrors.join("; ") || "스키마 불일치";
       userContent =
-        buildDesignUserContent(body, allowedSubjects, selectedQuestion) +
+        buildDesignUserContent(body, allowedSubjects, selectedQuestion, processKind) +
         `\n\n검증 오류: ${lastErr}. 규칙을 지켜 다시 생성하세요.`;
+      continue;
+    }
+
+    if (result.data.initialAnalysisProcessKind !== processKind) {
+      lastErr = `initialAnalysisProcessKind는 "${processKind}"이어야 합니다.`;
+      userContent =
+        buildDesignUserContent(body, allowedSubjects, selectedQuestion, processKind) +
+        `\n\n※ initialAnalysisProcessKind를 반드시 "${processKind}"로 두고, initialAnalysisExamples의 phase 순서를 탐구 유형에 맞추세요.`;
       continue;
     }
 
@@ -298,12 +373,17 @@ export async function generateExplorationDesign(
     if (subErr) {
       lastErr = subErr;
       userContent =
-        buildDesignUserContent(body, allowedSubjects, selectedQuestion) +
+        buildDesignUserContent(body, allowedSubjects, selectedQuestion, processKind) +
         `\n\n오류: ${subErr}. subjects는 후보 목록과 완전히 동일하게.`;
       continue;
     }
 
-    return result.data;
+    console.info(
+      "[explorationOpenai] generateExplorationDesign ok",
+      `${Date.now() - designStarted}ms`,
+      `attempts=${attempt + 1}`
+    );
+    return withSanitizedComparisonTable(result.data);
   }
 
   throw new Error(lastErr);

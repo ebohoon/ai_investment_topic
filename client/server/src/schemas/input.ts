@@ -535,8 +535,7 @@ export const designBodySchema = explorationRecommendCoreObjectSchema
     z.object({
       selectedQuestions: z
         .array(singleQuestionSchema)
-        .min(1, "탐구 질문을 1개 이상 선택하세요.")
-        .max(5, "탐구 질문은 최대 5개까지 선택할 수 있습니다."),
+        .length(1, "탐구 질문을 1개 선택해야 합니다."),
     })
   )
   .superRefine(refineExplorationConstraintsExtraOnly)
