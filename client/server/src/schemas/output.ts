@@ -104,7 +104,7 @@ export const comparisonTableSchema = z
     });
   });
 
-/** [7] 탐구 과정 단계별 실행 예시 — phase: data_ai 5단계 + general 5단계(문자열 겹침 없음) */
+/** [7] 탐구 과정 단계별 실행 방안 — phase: data_ai 5단계 + general 5단계(문자열 겹침 없음) */
 export const initialAnalysisPhaseSchema = z.enum([
   "문제 정의",
   "데이터 수집",
@@ -156,7 +156,7 @@ export const explorationDesignSchema = z
     comparisonTable: comparisonTableSchema,
     /** [7] 프로필: data_ai(데이터·AI) vs general(과정중심·비수치 가능) */
     initialAnalysisProcessKind: z.enum(["data_ai", "general"]),
-    /** [7] 탐구 과정 단계별 실행 예시 — 프로필에 따른 5단계 */
+    /** [7] 탐구 과정 단계별 실행 방안 — 프로필에 따른 5단계 */
     initialAnalysisExamples: initialAnalysisExamplesSchema,
     /** [8] 기대 결과 — 짧은 항목 3~6개(일목요연) */
     expectedResults: z.array(z.string().min(10).max(240)).min(3).max(6),

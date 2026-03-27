@@ -365,7 +365,7 @@ export async function generateExplorationDesign(
       lastErr = `initialAnalysisProcessKind는 "${processKind}"이어야 합니다.`;
       userContent =
         buildDesignUserContent(body, allowedSubjects, selectedQuestion, processKind) +
-        `\n\n※ initialAnalysisProcessKind를 반드시 "${processKind}"로 두고, 탐구 과정 단계별 실행 예시(initialAnalysisExamples)의 phase 순서를 탐구 유형에 맞추세요.`;
+        `\n\n※ initialAnalysisProcessKind를 반드시 "${processKind}"로 두고, 탐구 과정 단계별 실행 방안(initialAnalysisExamples)의 phase 순서를 탐구 유형에 맞추세요.`;
       continue;
     }
 

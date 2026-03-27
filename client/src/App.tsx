@@ -313,8 +313,8 @@ function formatDesignBlock(d: ExplorationDesign): string {
     formatComparisonTableForCopy(d.comparisonTable),
     "",
     d.initialAnalysisProcessKind === "data_ai"
-      ? "【7】 탐구 과정 단계별 실행 예시 (AI 업무 적용 프로세스 5단계)"
-      : "【7】 탐구 과정 단계별 실행 예시 (과정중심 탐구 5단계)",
+      ? "【7】 탐구 과정 단계별 실행 방안 (AI 업무 적용 프로세스 5단계)"
+      : "【7】 탐구 과정 단계별 실행 방안 (과정중심 탐구 5단계)",
     ...d.initialAnalysisExamples.map((s, i) =>
       formatInitialAnalysisStepForCopy(s, i, d.initialAnalysisProcessKind)
     ),
@@ -446,7 +446,7 @@ function DesignResultCard({
       </div>
 
       <div className="section">
-        <h3>[7] 탐구 과정 단계별 실행 예시</h3>
+        <h3>[7] 탐구 과정 단계별 실행 방안</h3>
         <ol className="design-analysis-example-list">
           {design.initialAnalysisExamples.map((step, i) => (
             <li key={i} className="design-analysis-example-step">
