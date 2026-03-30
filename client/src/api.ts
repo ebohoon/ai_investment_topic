@@ -51,21 +51,14 @@ export type RecommendedSource = {
   howItHelps: string;
 };
 
-/** [12] 관련 검색 1건 */
-export type RelatedSearchItem = {
-  title: string;
-  url: string;
-  summary: string;
-};
-
-/** [6] 비교·대조표(구조화) */
+/** [5] 비교·대조표(구조화) */
 export type ComparisonTableRow = { cells: string[] };
 export type ComparisonTable = {
   columnHeaders: string[];
   rows: ComparisonTableRow[];
 };
 
-/** [7] 탐구 과정 단계별 실행 방안 — 탐구 유형에 따라 phase 집합이 다름(순서 고정) */
+/** [6] 탐구 과정 단계별 실행 방안 — 탐구 유형에 따라 phase 집합이 다름(순서 고정) */
 export type InitialAnalysisProcessKind = "data_ai" | "general";
 
 export type InitialAnalysisStep = {
@@ -91,7 +84,6 @@ export type ExplorationDesign = {
   /** 핵심 용어·탐구 범위(작업 정의) */
   keyTermsDefinition: string;
   coreResearchQuestions: [string, string, string];
-  recommendedSources: RecommendedSource[];
   analysisFrames: [string, string, string];
   researchExecution: {
     dataCollection: string;
@@ -102,7 +94,7 @@ export type ExplorationDesign = {
   comparisonStructure: string;
   /** 비교·대조표 초안(열·행 배열; UI는 HTML 테이블로 렌더) */
   comparisonTable: ComparisonTable;
-  /** 데이터·AI 탐구 vs 과정중심 탐구 — [7] 탐구 과정 단계별 실행 방안 프로필 */
+  /** 데이터·AI 탐구 vs 과정중심 탐구 — [6] 탐구 과정 단계별 실행 방안 프로필 */
   initialAnalysisProcessKind: InitialAnalysisProcessKind;
   initialAnalysisExamples: [
     InitialAnalysisStep,
@@ -115,8 +107,8 @@ export type ExplorationDesign = {
   extensionDirections: string[];
   subjects: string[];
   recordSentence: string;
-  /** [12] 관련 자료 링크 10건 */
-  relatedSearchItems: RelatedSearchItem[];
+  /** [11] 추천 참고 자료 5건 — JSON·UI에서 맨 마지막 */
+  recommendedSources: RecommendedSource[];
 };
 
 export type QuestionsApiResponse = {

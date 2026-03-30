@@ -1,7 +1,5 @@
 /**
- * [7] 탐구 과정 단계별 실행 방안 — 탐구 유형(inquiryType)에 따른 프로필.
- * - data_ai: 데이터·AI 중심 → AI 업무 적용 프로세스 5단계
- * - general: 실험·이론·PBL 등 → 과정중심 탐구 5단계(수치·모델 강제 없음)
+ * [6] 탐구 과정 단계별 실행 방안 — 탐구 유형(inquiryType)에 따른 프로필.
  */
 
 export type InitialAnalysisProcessKind = "data_ai" | "general";
@@ -13,6 +11,7 @@ export function inferInitialAnalysisProcessKind(inquiryType: string): InitialAna
   return "general";
 }
 
+/** 데이터·AI 탐구 — AI 업무 적용 프로세스 5단계 */
 export const DATA_AI_PHASE_ORDER = [
   "문제 정의",
   "데이터 수집",
@@ -21,6 +20,7 @@ export const DATA_AI_PHASE_ORDER = [
   "AI 적용",
 ] as const;
 
+/** 과정중심 탐구 5단계 */
 export const GENERAL_PHASE_ORDER = [
   "탐구 문제·목표 정리",
   "자료·근거 수집",

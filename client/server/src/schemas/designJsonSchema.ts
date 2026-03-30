@@ -4,6 +4,7 @@
 
 import type { InitialAnalysisProcessKind } from "../lib/initialAnalysisProfile.js";
 import { DATA_AI_PHASE_ORDER, GENERAL_PHASE_ORDER } from "../lib/initialAnalysisProfile.js";
+import { RECOMMENDED_SOURCES_COUNT } from "../lib/explorationDesignLimits.js";
 
 const SOURCE_TYPE_ENUM = ["youtube", "paper_pdf", "institution", "news"] as const;
 
@@ -20,21 +21,27 @@ export function buildExplorationDesignJsonSchema(
     type: "object",
     additionalProperties: false,
     properties: {
-      title: { type: "string", minLength: 2, maxLength: 200 },
+      title: {
+        type: "string",
+        minLength: 2,
+        maxLength: 200,
+        description:
+          "그 기사·통계표·데이터셋·영상·문서를 가리키는 구체 제목. ‘○○ 홈’만 쓰지 말 것.",
+      },
       url: {
         type: "string",
         minLength: 12,
         maxLength: 2000,
         description:
-          "https만. youtube는 watch?v= 또는 youtu.be 동영상만; paper_pdf는 .pdf·arxiv·doi 등 문서 직접 링크만. institution·news는 공식 루트 가능. 나무위키·DC 금지.",
+          "https만. 열면 바로 그 자료가 보이는 딥링크. 임의 기사번호·데이터 ID·추측 경로 금지(404·삭제 방지). youtube=동영상 1편; paper_pdf=논문·PDF·doi 등; institution·news=홈(/) 금지. 나무위키·DC 금지.",
       },
       sourceType: { type: "string", enum: [...SOURCE_TYPE_ENUM] },
       howItHelps: {
         type: "string",
-        minLength: 80,
-        maxLength: 1500,
+        minLength: 40,
+        maxLength: 700,
         description:
-          "이 자료가 선택한 탐구 주제에 어떤 점에서 도움이 되는지, 왜 이 출처인지, 자료 안에서 무엇을 보면 좋은지까지 논리적으로 한 덩어리로 서술. 비공식 출처면 신뢰 한계를 문단 안에 명시.",
+          "위 url 한 페이지가 탐구에 어떻게 쓰이는지: 왜 이 주소인지, 그 화면에서 무엇을 보면 좋은지(표 항목·기사 문단 등). ‘사이트에서 검색하세요’로 떠넘기지 말 것. 비공식이면 한계를 문단 안에 명시.",
       },
     },
     required: ["title", "url", "sourceType", "howItHelps"],
@@ -51,27 +58,27 @@ export function buildExplorationDesignJsonSchema(
           properties: {
             dataCollection: {
               type: "string",
-              minLength: 20,
-              maxLength: 1500,
-              description: `[5] 자료 확보: 설문·관찰 등과 공공데이터·KOSIS·기관 공개 자료 등을 주제에 맞게 한 문맥에 녹여 서술(라벨로 쪼개지 말 것). ${researchExecutionAbstractionNote}`,
+              minLength: 12,
+              maxLength: 700,
+              description: `[4] 자료 확보: 설문·관찰 등과 공공데이터·KOSIS·기관 공개 자료 등을 주제에 맞게 한 문맥에 녹여 서술(라벨로 쪼개지 말 것). ${researchExecutionAbstractionNote}`,
             },
             analysisMethod: {
               type: "string",
-              minLength: 20,
-              maxLength: 1500,
-              description: `[5] 분석·통계·모델링의 종류와 논리. ${researchExecutionAbstractionNote}`,
+              minLength: 12,
+              maxLength: 700,
+              description: `[4] 분석·통계·모델링의 종류와 논리. ${researchExecutionAbstractionNote}`,
             },
             tools: {
               type: "string",
-              minLength: 10,
-              maxLength: 800,
-              description: `[5] 도구. Excel·시트·파이썬(Python)·AutoML 등. ${researchExecutionAbstractionNote}`,
+              minLength: 8,
+              maxLength: 350,
+              description: `[4] 도구. Excel·시트·파이썬(Python)·AutoML 등. ${researchExecutionAbstractionNote}`,
             },
             visualization: {
               type: "string",
-              minLength: 10,
-              maxLength: 800,
-              description: `[5] 시각화 유형·목적. ${researchExecutionAbstractionNote}`,
+              minLength: 8,
+              maxLength: 350,
+              description: `[4] 시각화 유형·목적. ${researchExecutionAbstractionNote}`,
             },
           },
           required: ["dataCollection", "analysisMethod", "tools", "visualization"],
@@ -82,31 +89,31 @@ export function buildExplorationDesignJsonSchema(
           properties: {
             dataCollection: {
               type: "string",
-              minLength: 20,
-              maxLength: 1500,
+              minLength: 12,
+              maxLength: 700,
               description:
-                `[5] 자료·근거: 실험·관찰·설문·독서와 공공데이터·문헌·기관 자료 등을 자연스럽게 함께 서술. 수치 필수 아님. ${researchExecutionAbstractionNote}`,
+                `[4] 자료·근거: 실험·관찰·설문·독서와 공공데이터·문헌·기관 자료 등을 자연스럽게 함께 서술. 수치 필수 아님. ${researchExecutionAbstractionNote}`,
             },
             analysisMethod: {
               type: "string",
-              minLength: 20,
-              maxLength: 1500,
+              minLength: 12,
+              maxLength: 700,
               description:
-                `[5] 분석·비교 방법(개념 분석, 비교, 인용 등). ${researchExecutionAbstractionNote}`,
+                `[4] 분석·비교 방법(개념 분석, 비교, 인용 등). ${researchExecutionAbstractionNote}`,
             },
             tools: {
               type: "string",
-              minLength: 10,
-              maxLength: 800,
+              minLength: 8,
+              maxLength: 350,
               description:
-                `[5] 도구: 한글·노션·캔바·실험기구·관찰일지 등. 코딩·AI는 주제에 필요할 때만. ${researchExecutionAbstractionNote}`,
+                `[4] 도구: 한글·노션·캔바·실험기구·관찰일지 등. 코딩·AI는 주제에 필요할 때만. ${researchExecutionAbstractionNote}`,
             },
             visualization: {
               type: "string",
-              minLength: 10,
-              maxLength: 800,
+              minLength: 8,
+              maxLength: 350,
               description:
-                `[5] 정리·시각화 유형·목적. ${researchExecutionAbstractionNote}`,
+                `[4] 정리·시각화 유형·목적. ${researchExecutionAbstractionNote}`,
             },
           },
           required: ["dataCollection", "analysisMethod", "tools", "visualization"],
@@ -127,7 +134,7 @@ export function buildExplorationDesignJsonSchema(
       rows: {
         type: "array",
         minItems: 2,
-        maxItems: 15,
+        maxItems: 4,
         items: {
           type: "object",
           additionalProperties: false,
@@ -136,7 +143,7 @@ export function buildExplorationDesignJsonSchema(
               type: "array",
               minItems: 2,
               maxItems: 8,
-              items: { type: "string", maxLength: 2000 },
+              items: { type: "string", maxLength: 250 },
               description:
                 "해당 행 칸 값. 개수는 columnHeaders와 동일. 데이터 칸에는 비교·대조할 내용의 요지(명사구·짧은 명사절). ~정리한다·~적는다·이 그룹에서~비율을 정리 등 절차 설명 금지. 열마다 대비가 드러나게.",
             },
@@ -149,7 +156,7 @@ export function buildExplorationDesignJsonSchema(
     },
     required: ["columnHeaders", "rows"],
     description:
-      "[6] 비교·대조표 초안. 구조화된 표만. 클라이언트가 HTML 테이블로 렌더링.",
+      "[5] 비교·대조표 초안. 구조화된 표만. 클라이언트가 HTML 테이블로 렌더링.",
   };
 
   const initialAnalysisPhaseEnum =
@@ -159,8 +166,8 @@ export function buildExplorationDesignJsonSchema(
 
   const initialAnalysisExamplesDescription =
     processKind === "data_ai"
-      ? "[7] 탐구 과정 단계별 실행 방안 — AI 업무 적용 프로세스 5단계. 순서 고정. procedure·concreteOutput·caveat는 현재형. ‘데이터 수집’ 단계는 설문·관찰과 공공데이터 등을 한 흐름으로 엮어 예시. [5]와 억지로 맞추지 않음."
-      : "[7] 탐구 과정 단계별 실행 방안 — 과정중심 탐구 5단계. 순서 고정. procedure·concreteOutput·caveat는 현재형. ‘자료·근거 수집’ 단계는 직접 자료와 공공·기관 자료를 자연스럽게 함께 드러낼 것. 수치·AI 모델을 억지로 넣지 말 것.";
+      ? "[6] 탐구 과정 단계별 실행 방안 — AI 업무 적용 프로세스 5단계. 순서·phase 고정. procedure·concreteOutput·caveat는 현재형."
+      : "[6] 탐구 과정 단계별 실행 방안 — 과정중심 탐구 5단계. 순서·phase 고정. 현재형. 데이터·AI 모델 억지 금지.";
 
   return {
     type: "object",
@@ -174,8 +181,8 @@ export function buildExplorationDesignJsonSchema(
       },
       keyTermsDefinition: {
         type: "string",
-        minLength: 30,
-        maxLength: 800,
+        minLength: 20,
+        maxLength: 400,
         description:
           "[1] 핵심 용어 작업 정의·탐구 범위. 이온 결합 vs 이온머 등 혼동 방지.",
       },
@@ -186,27 +193,19 @@ export function buildExplorationDesignJsonSchema(
         items: { type: "string", minLength: 10, maxLength: 400 },
         description: "[2] 핵심 탐구 질문 3개",
       },
-      recommendedSources: {
-        type: "array",
-        minItems: 3,
-        maxItems: 5,
-        items: recommendedSource,
-        description:
-          "[3] 추천 참고 자료. 접속 가능한 공식 https만. 불확실하면 루트 URL+howItHelps로 안내.",
-      },
       analysisFrames: {
         type: "array",
         minItems: 3,
         maxItems: 3,
         items: { type: "string", minLength: 1, maxLength: 200 },
-        description: "[4] 분석 프레임(관점 3가지)",
+        description: "[3] 분석 프레임(관점 3가지)",
       },
       researchExecution,
       comparisonStructure: {
         type: "string",
         minLength: 20,
-        maxLength: 2000,
-        description: "[6] 비교 구조 분석(서술: 무엇과 무엇을 어떤 기준으로 비교하는지).",
+        maxLength: 800,
+        description: "[5] 비교 구조 분석(서술: 무엇과 무엇을 어떤 기준으로 비교하는지).",
       },
       comparisonTable,
       initialAnalysisProcessKind: {
@@ -214,8 +213,8 @@ export function buildExplorationDesignJsonSchema(
         enum: [processKind],
         description:
           processKind === "data_ai"
-            ? "탐구 유형이 데이터 분석형·AI 활용 탐구형일 때. [7] 탐구 과정 단계별 실행 방안은 AI 업무 적용 프로세스."
-            : "실험형·이론 탐구형·문제 해결형(PBL) 등일 때. [7] 탐구 과정 단계별 실행 방안은 과정중심 5단계.",
+            ? "데이터 분석형·AI 활용 탐구형. [6]은 AI 업무 적용 프로세스 5단계."
+            : "실험·이론·PBL 등. [6]은 과정중심 탐구 5단계.",
       },
       initialAnalysisExamples: {
         type: "array",
@@ -233,15 +232,15 @@ export function buildExplorationDesignJsonSchema(
             },
             procedure: {
               type: "string",
-              minLength: 35,
-              maxLength: 800,
+              minLength: 20,
+              maxLength: 360,
               description:
                 "해당 단계에서 하는 일·상황. 학생 수준·탐구 맥락에 맞게 구체적으로.",
             },
             concreteOutput: {
               type: "string",
-              minLength: 35,
-              maxLength: 800,
+              minLength: 20,
+              maxLength: 360,
               description:
                 processKind === "data_ai"
                   ? "산출·수치·표·모델 출력·지표 등. 근거 없는 %·과장 금지."
@@ -249,8 +248,8 @@ export function buildExplorationDesignJsonSchema(
             },
             caveat: {
               type: "string",
-              minLength: 12,
-              maxLength: 400,
+              minLength: 8,
+              maxLength: 200,
               description: "한계·주의.",
             },
           },
@@ -260,70 +259,43 @@ export function buildExplorationDesignJsonSchema(
       expectedResults: {
         type: "array",
         minItems: 3,
-        maxItems: 6,
-        items: { type: "string", minLength: 10, maxLength: 240 },
-        description: "[8] 기대 결과 — 짧은 항목 3~6개, 한 줄씩.",
+        maxItems: 5,
+        items: { type: "string", minLength: 8, maxLength: 200 },
+        description: "[7] 기대 결과 — 짧은 항목 3~5개.",
       },
       extensionDirections: {
         type: "array",
         minItems: 3,
-        maxItems: 6,
-        items: { type: "string", minLength: 10, maxLength: 240 },
-        description: "[9] 확장 방향 — 짧은 항목 3~6개, 한 줄씩.",
+        maxItems: 5,
+        items: { type: "string", minLength: 8, maxLength: 200 },
+        description: "[8] 확장 방향 — 짧은 항목 3~5개.",
       },
       subjects: {
         type: "array",
         minItems: 2,
         maxItems: 5,
         items: { type: "string", enum: subjectEnum },
-        description: "[10] 교과 연계",
+        description: "[9] 교과 연계",
       },
       recordSentence: {
         type: "string",
         minLength: 20,
-        maxLength: 800,
-        description: "[11] 세특·생기부 문장",
+        maxLength: 500,
+        description: "[10] 세특·생기부 문장",
       },
-      relatedSearchItems: {
+      recommendedSources: {
         type: "array",
-        minItems: 10,
-        maxItems: 10,
-        items: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            title: {
-              type: "string",
-              minLength: 8,
-              maxLength: 220,
-              description:
-                "[유형] 접두 포함. 예: [보고서] ○○, [PDF] ○○, [기관] ○○, [YouTube] ○○",
-            },
-            url: {
-              type: "string",
-              minLength: 12,
-              maxLength: 2000,
-              description:
-                "https만. [YouTube]는 동영상 딥링크만, [PDF]는 문서 딥링크만; [기관]·[뉴스]는 공식 루트 가능. 나무위키·DC 금지.",
-            },
-            summary: {
-              type: "string",
-              minLength: 15,
-              maxLength: 500,
-              description: "2~3문장. 이 링크가 탐구에 어떻게 도움이 되는지.",
-            },
-          },
-          required: ["title", "url", "summary"],
-        },
+        minItems: RECOMMENDED_SOURCES_COUNT,
+        maxItems: RECOMMENDED_SOURCES_COUNT,
+        items: recommendedSource,
         description:
-          "[12] 관련 자료 10건. 카드형(제목·URL·요약). [3]과 동일 URL 규칙. 유형 태그와 실제 https 필수.",
+          `[11] 추천 참고 자료 정확히 ${RECOMMENDED_SOURCES_COUNT}개. 객체 필드 마지막에 둠. 모두 주제와 직결된 딥링크(기관·언론 홈 URL 금지). title·url(https)·sourceType·howItHelps. 유형 골고루(YouTube·논문/PDF·기관·기사).`,
       },
     },
     required: [
       "oneLineSummary",
       "keyTermsDefinition",
       "coreResearchQuestions",
-      "recommendedSources",
       "analysisFrames",
       "researchExecution",
       "comparisonStructure",
@@ -334,7 +306,7 @@ export function buildExplorationDesignJsonSchema(
       "extensionDirections",
       "subjects",
       "recordSentence",
-      "relatedSearchItems",
+      "recommendedSources",
     ],
   };
 }

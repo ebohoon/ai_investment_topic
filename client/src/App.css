@@ -292,6 +292,14 @@
 
 .design-result-card--item {
   margin-top: 0;
+  /* 번호 블록 사이 1px 구분선(다크 UI 톤) */
+  --design-section-divider: #3e4b5b;
+}
+
+.design-result-card--item .design-result-block + .design-result-block {
+  margin-top: 0;
+  padding-top: 1.15rem;
+  border-top: 1px solid var(--design-section-divider);
 }
 
 .design-result-card--item .design-result-title {
@@ -353,15 +361,13 @@
 
 .design-result-card--item .section--q2 {
   margin-top: 0;
-  padding-top: 1.15rem;
-  border-top: 1px solid rgba(100, 130, 180, 0.22);
 }
 
 .design-key-terms {
   margin-bottom: 0;
 }
 
-/* [6] 비교표: 열 정렬 유지(가로 스크롤), 줄바꿈은 pre에서만 */
+/* [5] 비교표: 열 정렬 유지(가로 스크롤), 줄바꿈은 pre에서만 */
 .design-comparison-table-wrap {
   margin-top: 0.35rem;
   max-width: 100%;
@@ -428,7 +434,7 @@
   margin-bottom: 0.45rem;
 }
 
-/* [4] 분석 프레임 — 불릿 대신 카드형 박스 */
+/* [3] 분석 프레임 — 불릿 대신 카드형 박스 */
 .design-analysis-frames {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -613,11 +619,31 @@
   line-height: 1.35;
 }
 
+.design-source-item__deeplink-label,
+.design-source-item__rationale-label {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.design-source-item__deeplink-label {
+  margin-top: 0.55rem;
+  margin-bottom: 0.2rem;
+}
+
+.design-source-item__rationale-label {
+  margin-top: 0.65rem;
+  margin-bottom: 0.2rem;
+}
+
 .design-source-item__url {
   display: inline-block;
   font-size: 0.78rem;
   word-break: break-all;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
   color: #7dd3fc;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -628,7 +654,7 @@
 }
 
 .design-source-item__rationale {
-  margin: 0.45rem 0 0;
+  margin: 0;
   padding: 0.65rem 0.75rem;
   border-radius: 10px;
   border: 1px solid rgba(100, 130, 180, 0.2);

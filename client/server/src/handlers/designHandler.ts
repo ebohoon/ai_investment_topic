@@ -1,4 +1,5 @@
 import { generateExplorationDesign } from "../lib/explorationOpenai.js";
+import { mapGenerationFailure } from "../lib/handlerErrors.js";
 import { resolveAllowedSubjectsWithCurriculum } from "../lib/subjectRules.js";
 import { saveGeneratedSession } from "../lib/sessionStore.js";
 import { designBodySchema } from "../schemas/input.js";
@@ -48,22 +49,7 @@ export async function runDesign(rawBody: unknown): Promise<DesignHandlerResult> 
   } catch (e) {
     const raw = e instanceof Error ? e.message : "서버 오류";
     console.error("[runDesign]", e);
-
-    if (raw.includes("OPENAI_API_KEY")) {
-      return { status: 503, body: { error: raw } };
-    }
-    if (/rate limit|429|too many requests/i.test(raw)) {
-      return {
-        status: 503,
-        body: { error: "요청이 많아 잠시 후 다시 시도해 주세요." },
-      };
-    }
-
-    return {
-      status: 500,
-      body: {
-        error: "일시적으로 생성에 실패했습니다. 잠시 후 다시 시도해 주세요.",
-      },
-    };
+    const out = mapGenerationFailure(raw);
+    return { status: out.status, body: { error: out.error } };
   }
 }

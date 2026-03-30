@@ -17,6 +17,8 @@ import {
   type QuestionsResponse,
 } from "../schemas/output.js";
 import { readRuntimeEnv } from "./runtimeEnv.js";
+import { normalizeExplorationDesignPayload } from "./urlPolicy.js";
+import { summarizeZodError } from "./zodErrorSummary.js";
 
 /** 모델이 ---, ___ 등만 넣는 경우 화면에 의미 없는 표가 되어 치환 */
 function isPlaceholderComparisonCell(cell: string): boolean {
@@ -210,6 +212,8 @@ async function callDesignModel(
   const completion = await client.chat.completions.create({
     model,
     temperature: 0.55,
+    /** 스키마 축소 후에도 여유 두고 상한 — 무한 길이 생성·지연 완화 */
+    max_completion_tokens: 16_000,
     response_format: {
       type: "json_schema",
       json_schema: {
@@ -258,12 +262,13 @@ export async function generateResearchQuestions(
   let userContent = buildQuestionsUserContent(body, allowedSubjects);
 
   let lastErr = "알 수 없는 오류";
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     let raw: string;
     try {
       raw = await callQuestionsModel(client, model, system, userContent);
     } catch (e) {
       lastErr = e instanceof Error ? e.message : "모델 호출 실패";
+      console.error("[generateResearchQuestions] model call", lastErr);
       userContent =
         buildQuestionsUserContent(body, allowedSubjects) +
         "\n\n직전 요청이 실패했습니다. 동일 규칙으로 questions만 다시 출력하세요.";
@@ -283,10 +288,11 @@ export async function generateResearchQuestions(
 
     const result = questionsResponseSchema.safeParse(parsed);
     if (!result.success) {
-      lastErr = result.error.flatten().formErrors.join("; ") || "스키마 불일치";
+      lastErr = summarizeZodError(result.error);
+      console.error("[generateResearchQuestions] zod", lastErr);
       userContent =
         buildQuestionsUserContent(body, allowedSubjects) +
-        `\n\n검증 오류: ${lastErr}. 규칙을 지켜 다시 생성하세요.`;
+        `\n\n검증 오류(반드시 수정): ${lastErr}. 규칙을 지켜 다시 생성하세요.`;
       continue;
     }
 
@@ -322,7 +328,7 @@ export async function generateExplorationDesign(
 
   let lastErr = "알 수 없는 오류";
   const designStarted = Date.now();
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 4; attempt++) {
     let raw: string;
     try {
       raw = await callDesignModel(
@@ -335,6 +341,7 @@ export async function generateExplorationDesign(
       );
     } catch (e) {
       lastErr = e instanceof Error ? e.message : "모델 호출 실패";
+      console.error("[generateExplorationDesign] model call", lastErr);
       userContent =
         buildDesignUserContent(body, allowedSubjects, selectedQuestion, processKind) +
         "\n\n직전 요청이 실패했습니다. 동일 규칙으로 설계 JSON만 다시 출력하세요.";
@@ -352,12 +359,15 @@ export async function generateExplorationDesign(
       continue;
     }
 
+    normalizeExplorationDesignPayload(parsed);
+
     const result = explorationDesignSchema.safeParse(parsed);
     if (!result.success) {
-      lastErr = result.error.flatten().formErrors.join("; ") || "스키마 불일치";
+      lastErr = summarizeZodError(result.error);
+      console.error("[generateExplorationDesign] zod", lastErr);
       userContent =
         buildDesignUserContent(body, allowedSubjects, selectedQuestion, processKind) +
-        `\n\n검증 오류: ${lastErr}. 규칙을 지켜 다시 생성하세요.`;
+        `\n\n검증 오류(반드시 수정): ${lastErr}. 필드별 최소 길이·개수·phase 순서·URL 규칙을 정확히 맞추세요.`;
       continue;
     }
 

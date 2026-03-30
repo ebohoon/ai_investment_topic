@@ -16,7 +16,6 @@ import {
   type ExplorationPayload,
   type InitialAnalysisStep,
   type RecommendedSource,
-  type RelatedSearchItem,
 } from "./api";
 import {
   COURSE_CATEGORY_OPTIONS,
@@ -221,26 +220,6 @@ function ComparisonTableView({ table }: { table: ComparisonTable }) {
   );
 }
 
-function RelatedSearchCard({ item, index }: { item: RelatedSearchItem; index: number }) {
-  const n = index + 1;
-  return (
-    <li className="design-related-card">
-      <span className="design-related-card__num">{n}.</span>
-      <div className="design-related-card__body">
-        <a
-          className="design-related-card__link"
-          href={item.url}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {item.title}
-        </a>
-        <p className="design-related-card__summary">{item.summary}</p>
-      </div>
-    </li>
-  );
-}
-
 function subjectChipClassName(subject: string): string {
   const key = subject.trim();
   const map: Record<string, string> = {
@@ -278,8 +257,8 @@ function formatInitialAnalysisStepForCopy(
 function formatRecommendedSourceBlock(s: RecommendedSource, i: number): string {
   return [
     `  [${i + 1}] ${s.title} (${SOURCE_TYPE_LABEL[s.sourceType]})`,
-    `  URL: ${s.url}`,
-    `  주제와의 연결: ${s.howItHelps}`,
+    `  주제별 바로가기(딥링크): ${s.url}`,
+    `  이 페이지 활용: ${s.howItHelps}`,
   ].join("\n");
 }
 
@@ -294,49 +273,42 @@ function formatDesignBlock(d: ExplorationDesign): string {
     "【2】 핵심 탐구 질문",
     ...d.coreResearchQuestions.map((q, i) => `${i + 1}. ${q}`),
     "",
-    "【3】 추천 참고 자료",
-    ...d.recommendedSources.map((s, i) => formatRecommendedSourceBlock(s, i)),
-    "",
-    "【4】 분석 프레임 (관점 3가지)",
+    "【3】 분석 프레임 (관점 3가지)",
     ...d.analysisFrames.map((f, i) => `${i + 1}. ${f}`),
     "",
-    "【5】 탐구 방법",
+    "【4】 탐구 방법",
     "· 데이터 수집: " + d.researchExecution.dataCollection,
     "· 분석: " + d.researchExecution.analysisMethod,
     "· 도구: " + d.researchExecution.tools,
     "· 시각화: " + d.researchExecution.visualization,
     "",
-    "【6】 비교 구조 분석",
+    "【5】 비교 구조 분석",
     d.comparisonStructure,
     "",
-    "【6】 비교·대조표 초안",
+    "【5】 비교·대조표 초안",
     formatComparisonTableForCopy(d.comparisonTable),
     "",
     d.initialAnalysisProcessKind === "data_ai"
-      ? "【7】 탐구 과정 단계별 실행 방안 (AI 업무 적용 프로세스 5단계)"
-      : "【7】 탐구 과정 단계별 실행 방안 (과정중심 탐구 5단계)",
+      ? "【6】 탐구 과정 단계별 실행 방안 (AI 업무 적용 프로세스 5단계)"
+      : "【6】 탐구 과정 단계별 실행 방안 (과정중심 탐구 5단계)",
     ...d.initialAnalysisExamples.map((s, i) =>
       formatInitialAnalysisStepForCopy(s, i, d.initialAnalysisProcessKind)
     ),
     "",
-    "【8】 기대 결과",
+    "【7】 기대 결과",
     ...d.expectedResults.map((line, i) => `${i + 1}. ${line}`),
     "",
-    "【9】 확장 방향",
+    "【8】 확장 방향",
     ...d.extensionDirections.map((line, i) => `${i + 1}. ${line}`),
     "",
-    "【10】 교과 연계",
+    "【9】 교과 연계",
     d.subjects.join(", "),
     "",
-    "【11】 세특·생기부 문장 초안(참고)",
+    "【10】 세특·생기부 문장 초안(참고)",
     `"${d.recordSentence}"`,
     "",
-    "【12】 관련 검색·참고 링크",
-    ...d.relatedSearchItems.flatMap((item, i) => [
-      `${i + 1}. ${item.title}`,
-      `   ${item.url}`,
-      `   ${item.summary}`,
-    ]),
+    "【11】 추천 참고 자료",
+    ...d.recommendedSources.map((s, i) => formatRecommendedSourceBlock(s, i)),
   ].join("\n");
 }
 
@@ -366,16 +338,18 @@ function DesignResultCard({
       className="topic-card design-result-card design-result-card--item"
       aria-labelledby={`design-card-${index}-title`}
     >
-      <p className="design-block-label">[1] 탐구 한 줄 요약</p>
-      <h2 id={`design-card-${index}-title`} className="design-result-title">
-        {`"${design.oneLineSummary}"`}
-      </h2>
-      <div className="design-key-terms-wrap">
-        <p className="design-sub-label design-sub-label--keyterms">핵심 용어·탐구 범위</p>
-        <p className="text-block design-key-terms">{design.keyTermsDefinition}</p>
+      <div className="design-result-block design-result-block--lead">
+        <p className="design-block-label">[1] 탐구 한 줄 요약</p>
+        <h2 id={`design-card-${index}-title`} className="design-result-title">
+          {`"${design.oneLineSummary}"`}
+        </h2>
+        <div className="design-key-terms-wrap">
+          <p className="design-sub-label design-sub-label--keyterms">핵심 용어·탐구 범위</p>
+          <p className="text-block design-key-terms">{design.keyTermsDefinition}</p>
+        </div>
       </div>
 
-      <div className="section section--q2">
+      <div className="design-result-block section section--q2">
         <h3>[2] 핵심 탐구 질문</h3>
         <ol className="design-list design-list--numbered">
           {design.coreResearchQuestions.map((q, i) => (
@@ -384,34 +358,8 @@ function DesignResultCard({
         </ol>
       </div>
 
-      <div className="section">
-        <h3>[3] 추천 참고 자료</h3>
-        <p className="field-hint design-link-disclaimer">
-          ※ 아래 링크는 참고용이에요. 열리지 않으면 해당 기관·포털 공식 사이트에서 검색해 보세요.
-        </p>
-        <ul className="design-source-list">
-          {design.recommendedSources.map((s, i) => (
-            <li key={i} className="design-source-item">
-              <div className="design-source-item__head">
-                <span className="design-source-item__type">{SOURCE_TYPE_LABEL[s.sourceType]}</span>
-                <strong className="design-source-item__title">{s.title}</strong>
-              </div>
-              <a
-                className="design-source-item__url"
-                href={s.url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {s.url}
-              </a>
-              <p className="design-source-item__rationale">{s.howItHelps}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <div className="section">
-        <h3>[4] 분석 프레임 (관점 3가지)</h3>
+      <div className="design-result-block section">
+        <h3>[3] 분석 프레임 (관점 3가지)</h3>
         <div className="design-analysis-frames" role="list">
           {design.analysisFrames.map((f, i) => (
             <div key={i} className="design-analysis-frame" role="listitem">
@@ -424,8 +372,8 @@ function DesignResultCard({
         </div>
       </div>
 
-      <div className="section">
-        <h3>[5] 탐구 방법</h3>
+      <div className="design-result-block section">
+        <h3>[4] 탐구 방법</h3>
         <dl className="design-dl">
           <dt>데이터 수집</dt>
           <dd>{design.researchExecution.dataCollection}</dd>
@@ -438,15 +386,15 @@ function DesignResultCard({
         </dl>
       </div>
 
-      <div className="section">
-        <h3>[6] 비교 구조 분석</h3>
+      <div className="design-result-block section">
+        <h3>[5] 비교 구조 분석</h3>
         <p className="text-block">{design.comparisonStructure}</p>
         <p className="design-sub-label design-sub-label--spaced">비교·대조표 초안</p>
         <ComparisonTableView table={design.comparisonTable} />
       </div>
 
-      <div className="section">
-        <h3>[7] 탐구 과정 단계별 실행 방안</h3>
+      <div className="design-result-block section">
+        <h3>[6] 탐구 과정 단계별 실행 방안</h3>
         <ol className="design-analysis-example-list">
           {design.initialAnalysisExamples.map((step, i) => (
             <li key={i} className="design-analysis-example-step">
@@ -466,8 +414,8 @@ function DesignResultCard({
         </ol>
       </div>
 
-      <div className="section">
-        <h3>[8] 기대 결과</h3>
+      <div className="design-result-block section">
+        <h3>[7] 기대 결과</h3>
         <ul className="design-outline-list">
           {design.expectedResults.map((line, i) => (
             <li key={i}>{line}</li>
@@ -475,8 +423,8 @@ function DesignResultCard({
         </ul>
       </div>
 
-      <div className="section">
-        <h3>[9] 확장 방향</h3>
+      <div className="design-result-block section">
+        <h3>[8] 확장 방향</h3>
         <ul className="design-outline-list">
           {design.extensionDirections.map((line, i) => (
             <li key={i}>{line}</li>
@@ -484,8 +432,8 @@ function DesignResultCard({
         </ul>
       </div>
 
-      <div className="section">
-        <h3>[10] 교과 연계</h3>
+      <div className="design-result-block section">
+        <h3>[9] 교과 연계</h3>
         <div className="chips chips--design-subjects">
           {design.subjects.map((s) => (
             <span key={s} className={subjectChipClassName(s)}>
@@ -495,24 +443,40 @@ function DesignResultCard({
         </div>
       </div>
 
-      <div className="section">
-        <h3>[11] 세특·생기부 문장 초안 (참고)</h3>
+      <div className="design-result-block section">
+        <h3>[10] 세특·생기부 문장 초안 (참고)</h3>
         <p className="text-block">"{design.recordSentence}"</p>
         <p className="field-hint" style={{ marginTop: "0.5rem" }}>
           * 실제 기재는 학교 기재요령·교사 관찰에 따릅니다.
         </p>
       </div>
 
-      <div className="section">
-        <h3>[12] 관련 검색·참고 링크</h3>
+      <div className="design-result-block section">
+        <h3>[11] 추천 참고 자료</h3>
         <p className="field-hint design-link-disclaimer">
           ※ 아래 링크는 참고용이에요. 열리지 않으면 해당 기관·포털 공식 사이트에서 검색해 보세요.
         </p>
-        <ol className="design-related-list">
-          {design.relatedSearchItems.map((item, i) => (
-            <RelatedSearchCard key={i} item={item} index={i} />
+        <ul className="design-source-list">
+          {design.recommendedSources.map((s, i) => (
+            <li key={i} className="design-source-item">
+              <div className="design-source-item__head">
+                <span className="design-source-item__type">{SOURCE_TYPE_LABEL[s.sourceType]}</span>
+                <strong className="design-source-item__title">{s.title}</strong>
+              </div>
+              <p className="design-source-item__deeplink-label">주제별 바로가기</p>
+              <a
+                className="design-source-item__url"
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {s.url}
+              </a>
+              <p className="design-source-item__rationale-label">이 페이지 활용</p>
+              <p className="design-source-item__rationale">{s.howItHelps}</p>
+            </li>
           ))}
-        </ol>
+        </ul>
       </div>
     </article>
   );

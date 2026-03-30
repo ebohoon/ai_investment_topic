@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { readRuntimeEnv } from "./runtimeEnv.js";
+import { summarizeZodError } from "./zodErrorSummary.js";
 import { FEW_SHOT_ASSISTANT, buildSystemPrompt } from "../prompts/system.js";
 import type { RecommendBody } from "../schemas/input.js";
 import { buildRecommendResponseJsonSchema } from "../schemas/recommendJsonSchema.js";
@@ -141,12 +142,13 @@ export async function generateRecommendations(
   let userContent = buildUserContent(body, allowedSubjects);
 
   let lastErr = "알 수 없는 오류";
-  for (let attempt = 0; attempt < 2; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     let raw: string;
     try {
       raw = await callModel(client, model, system, userContent, allowedSubjects);
     } catch (e) {
       lastErr = e instanceof Error ? e.message : "모델 호출 실패";
+      console.error("[generateRecommendations] model call", lastErr);
       userContent =
         buildUserContent(body, allowedSubjects) +
         "\n\n직전 요청이 실패했습니다. 동일 규칙으로 다시 생성하세요.";
@@ -166,10 +168,11 @@ export async function generateRecommendations(
 
     const result = recommendResponseSchema.safeParse(parsed);
     if (!result.success) {
-      lastErr = result.error.flatten().formErrors.join("; ") || "스키마 불일치";
+      lastErr = summarizeZodError(result.error);
+      console.error("[generateRecommendations] zod", lastErr);
       userContent =
         buildUserContent(body, allowedSubjects) +
-        `\n\n검증 오류: ${lastErr}. 규칙을 지켜 다시 생성하세요.`;
+        `\n\n검증 오류(반드시 수정): ${lastErr}. 규칙을 지켜 다시 생성하세요.`;
       continue;
     }
 
