@@ -257,7 +257,7 @@ function formatInitialAnalysisStepForCopy(
 function formatRecommendedSourceBlock(s: RecommendedSource, i: number): string {
   return [
     `  [${i + 1}] ${s.title} (${SOURCE_TYPE_LABEL[s.sourceType]})`,
-    `  이 페이지 활용: ${s.howItHelps}`,
+    `  ${s.howItHelps}`,
   ].join("\n");
 }
 
@@ -462,7 +462,6 @@ function DesignResultCard({
                 <span className="design-source-item__type">{SOURCE_TYPE_LABEL[s.sourceType]}</span>
                 <strong className="design-source-item__title">{s.title}</strong>
               </div>
-              <p className="design-source-item__rationale-label">이 페이지 활용</p>
               <p className="design-source-item__rationale">{s.howItHelps}</p>
             </li>
           ))}

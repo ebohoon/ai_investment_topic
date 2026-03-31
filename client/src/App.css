@@ -619,17 +619,8 @@
   line-height: 1.35;
 }
 
-.design-source-item__rationale-label {
-  margin: 0.55rem 0 0.2rem;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
 .design-source-item__rationale {
-  margin: 0;
+  margin: 0.5rem 0 0;
   padding: 0.65rem 0.75rem;
   border-radius: 10px;
   border: 1px solid rgba(100, 130, 180, 0.2);
