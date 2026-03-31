@@ -619,38 +619,13 @@
   line-height: 1.35;
 }
 
-.design-source-item__deeplink-label,
 .design-source-item__rationale-label {
-  margin: 0;
+  margin: 0.55rem 0 0.2rem;
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text-muted);
-}
-
-.design-source-item__deeplink-label {
-  margin-top: 0.55rem;
-  margin-bottom: 0.2rem;
-}
-
-.design-source-item__rationale-label {
-  margin-top: 0.65rem;
-  margin-bottom: 0.2rem;
-}
-
-.design-source-item__url {
-  display: inline-block;
-  font-size: 0.78rem;
-  word-break: break-all;
-  margin-bottom: 0;
-  color: #7dd3fc;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.design-source-item__url:hover {
-  color: #bae6fd;
 }
 
 .design-source-item__rationale {

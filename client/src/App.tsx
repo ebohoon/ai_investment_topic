@@ -257,7 +257,6 @@ function formatInitialAnalysisStepForCopy(
 function formatRecommendedSourceBlock(s: RecommendedSource, i: number): string {
   return [
     `  [${i + 1}] ${s.title} (${SOURCE_TYPE_LABEL[s.sourceType]})`,
-    `  주제별 바로가기(딥링크): ${s.url}`,
     `  이 페이지 활용: ${s.howItHelps}`,
   ].join("\n");
 }
@@ -454,7 +453,7 @@ function DesignResultCard({
       <div className="design-result-block section">
         <h3>[11] 추천 참고 자료</h3>
         <p className="field-hint design-link-disclaimer">
-          ※ 아래 링크는 참고용이에요. 열리지 않으면 해당 기관·포털 공식 사이트에서 검색해 보세요.
+          ※ URL은 표시하지 않아요. 제목·유형·활용 설명을 보고 해당 기관·포털에서 검색해 보세요.
         </p>
         <ul className="design-source-list">
           {design.recommendedSources.map((s, i) => (
@@ -463,15 +462,6 @@ function DesignResultCard({
                 <span className="design-source-item__type">{SOURCE_TYPE_LABEL[s.sourceType]}</span>
                 <strong className="design-source-item__title">{s.title}</strong>
               </div>
-              <p className="design-source-item__deeplink-label">주제별 바로가기</p>
-              <a
-                className="design-source-item__url"
-                href={s.url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {s.url}
-              </a>
               <p className="design-source-item__rationale-label">이 페이지 활용</p>
               <p className="design-source-item__rationale">{s.howItHelps}</p>
             </li>
